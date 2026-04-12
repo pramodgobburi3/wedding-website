@@ -76,12 +76,11 @@ export default function RSVPForm() {
   }, [])
 
   const [form, setForm] = useState({
-    name:     '',
-    email:    '',
-    guests:   '1',
-    dietary:  'none',
-    message:  '',
-    events:   { sangeet: false, baraat: false, ceremony: false, reception: false },
+    name:    '',
+    email:   '',
+    guests:  '1',
+    message: '',
+    events:  { sangeet: false, baraat: false, ceremony: false, reception: false },
   })
   const [status, setStatus]   = useState('idle') // idle | submitting | success | error
   const [errors, setErrors]   = useState({})
@@ -119,7 +118,6 @@ export default function RSVPForm() {
           name:    form.name.trim(),
           email:   form.email.trim().toLowerCase(),
           guests:  Number(form.guests),
-          dietary: form.dietary,
           message: form.message.trim(),
           events:  Object.entries(form.events)
             .filter(([, v]) => v)
@@ -291,23 +289,6 @@ export default function RSVPForm() {
               ))}
             </select>
           </div>
-
-          {/* Dietary Restrictions */}
-          {/* <div className="mb-8">
-            <label htmlFor="dietary" className={labelBase}>Dietary Restrictions</label>
-            <select
-              id="dietary" name="dietary"
-              value={form.dietary} onChange={handleChange}
-              className={`${inputBase} cursor-pointer`}
-            >
-              <option value="none">None</option>
-              <option value="vegetarian">Vegetarian</option>
-              <option value="vegan">Vegan</option>
-              <option value="gluten-free">Gluten-Free</option>
-              <option value="halal">Halal</option>
-              <option value="other">Other (please note in message)</option>
-            </select>
-          </div> */}
 
           {/* Events attending */}
           <div className="mb-8">

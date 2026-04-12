@@ -36,7 +36,7 @@ function doPost(e) {
         'Full Name',
         'Email',
         'Number of Guests',
-        'Dietary Restrictions',
+        'Events Attending',
         'Message',
       ]]);
       header.setFontWeight('bold');
@@ -59,8 +59,8 @@ function doPost(e) {
       String(data.name).trim(),
       String(data.email).trim().toLowerCase(),
       Number(data.guests),
-      String(data.dietary || 'none'),
-      String(data.message  || '').trim(),
+      String(data.events  || '').trim(),
+      String(data.message || '').trim(),
     ]);
 
     // Optional: uncomment to send a confirmation email to the guest

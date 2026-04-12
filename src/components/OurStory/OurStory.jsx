@@ -27,16 +27,28 @@ function SmallCaps({ children, className = '' }) {
 
 // ─── Family block ─────────────────────────────────────────────────────────────
 
-function FamilyBlock({ label, lateElders, parents, city }) {
+function FamilyBlock({ label, maternalGrandparents, paternalGrandparents, parents, city }) {
+  const hasElders = maternalGrandparents || paternalGrandparents
   return (
     <div className="text-center px-4">
       <SmallCaps className="mb-3">{label}</SmallCaps>
 
-      {lateElders && (
-        <p className="font-serif italic text-bark/60 text-md leading-relaxed mb-2">
-          With the blessings of<br />
-          <span className="not-italic text-bark/75">{lateElders}</span>
-        </p>
+      {hasElders && (
+        <div className="mb-4">
+          <p className="font-serif italic text-bark/55 text-sm mb-2">With the blessings of</p>
+          {maternalGrandparents && (
+            <p className="font-serif text-bark/70 text-sm leading-snug mb-1">
+              {maternalGrandparents}
+              <span className="block font-sans text-[9px] tracking-widest uppercase text-bark/35 mt-0.5">Maternal</span>
+            </p>
+          )}
+          {paternalGrandparents && (
+            <p className="font-serif text-bark/70 text-sm leading-snug">
+              {paternalGrandparents}
+              <span className="block font-sans text-[9px] tracking-widest uppercase text-bark/35 mt-0.5">Paternal</span>
+            </p>
+          )}
+        </div>
       )}
 
       <p
@@ -131,7 +143,8 @@ export default function OurStory() {
         {/* ── Bride's family ── */}
         <FamilyBlock
           label="Bride's Family"
-          lateElders="Late Smt. [Maternal Grandmother] & Late Shri [Maternal Grandfather]"
+          maternalGrandparents="Late Smt. [Maternal Grandmother] & Late Shri [Maternal Grandfather]"
+          paternalGrandparents="Late Smt. [Paternal Grandmother] & Late Shri [Paternal Grandfather]"
           parents="Smt. Sridevi & Shri Krishna Prasad Madiraju"
         />
 
@@ -145,8 +158,9 @@ export default function OurStory() {
         {/* ── Groom's family ── */}
         <FamilyBlock
           label="Groom's Family"
-          lateElders="Late Smt. [Paternal Grandmother] & Late Shri [Paternal Grandfather]"
-          parents="Smt. Sandhya & Late Shri Srimannarayanacharyulu Gobburi "
+          maternalGrandparents="Late Smt. [Maternal Grandmother] & Late Shri [Maternal Grandfather]"
+          paternalGrandparents="Late Smt. Anasuya & Late Shri Srimannarayanacharyulu Gobburi"
+          parents="Smt. Sandhya & Late Shri Venkata Gobburi"
         />
 
         <GoldDivider wide />
