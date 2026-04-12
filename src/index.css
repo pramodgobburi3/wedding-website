@@ -1,0 +1,58 @@
+@tailwind base;
+@tailwind components;
+@tailwind utilities;
+
+@layer base {
+  html {
+    scroll-behavior: smooth;
+  }
+
+  body {
+    @apply bg-ivory font-sans text-bark;
+    -webkit-font-smoothing: antialiased;
+    -moz-osx-font-smoothing: grayscale;
+  }
+
+  /* Hide OS cursor on desktop for custom botanical cursor */
+  @media (hover: hover) and (pointer: fine) {
+    body {
+      cursor: none;
+    }
+    a, button, [role="button"], select, input, textarea, label {
+      cursor: none;
+    }
+  }
+
+  ::-webkit-scrollbar {
+    width: 5px;
+  }
+  ::-webkit-scrollbar-track {
+    @apply bg-ivory-dark;
+  }
+  ::-webkit-scrollbar-thumb {
+    @apply bg-dustyRose rounded-full;
+  }
+}
+
+@layer utilities {
+  .text-shadow-bloom {
+    text-shadow: 0 2px 32px rgba(74, 55, 40, 0.35);
+  }
+  .text-shadow-light {
+    text-shadow: 0 1px 16px rgba(248, 243, 236, 0.5);
+  }
+  .section-pad {
+    @apply py-24 px-6;
+  }
+  /* 3D card flip helpers */
+  .preserve-3d {
+    transform-style: preserve-3d;
+  }
+  .backface-hidden {
+    backface-visibility: hidden;
+    -webkit-backface-visibility: hidden;
+  }
+  .rotate-y-180 {
+    transform: rotateY(180deg);
+  }
+}
