@@ -39,13 +39,11 @@ function FamilyBlock({ label, maternalGrandparents, paternalGrandparents, parent
           {maternalGrandparents && (
             <p className="font-serif text-bark/70 text-sm leading-snug mb-1">
               {maternalGrandparents}
-              <span className="block font-sans text-[9px] tracking-widest uppercase text-bark/35 mt-0.5">Maternal</span>
             </p>
           )}
           {paternalGrandparents && (
             <p className="font-serif text-bark/70 text-sm leading-snug">
               {paternalGrandparents}
-              <span className="block font-sans text-[9px] tracking-widest uppercase text-bark/35 mt-0.5">Paternal</span>
             </p>
           )}
         </div>
