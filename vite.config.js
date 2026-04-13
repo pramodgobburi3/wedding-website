@@ -16,6 +16,13 @@ export default defineConfig({
         },
       },
     },
+    // Don't modulepreload three-vendor — GardenScene is lazy, so preloading Three.js
+    // on every page load wastes 928KB of bandwidth before it's needed.
+    // It will still load on demand when GardenScene mounts.
+    modulePreload: {
+      resolveDependencies: (_, deps) =>
+        deps.filter(dep => !dep.includes('three-vendor')),
+    },
     chunkSizeWarningLimit: 700,
   },
 })

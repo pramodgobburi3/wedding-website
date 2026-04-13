@@ -1,7 +1,7 @@
 import { useEffect, useRef } from 'react'
 import { gsap } from 'gsap'
 import { ScrollTrigger } from 'gsap/ScrollTrigger'
-import invitationBg from '../../assets/photos/invitation_background.png'
+import invitationBg from '../../assets/photos/invitation_background.webp'
 
 // ─── Shared decorative components ────────────────────────────────────────────
 
@@ -36,14 +36,14 @@ function FamilyBlock({ label, maternalGrandparents, paternalGrandparents, parent
       {hasElders && (
         <div className="mb-4">
           <p className="font-serif italic text-bark/55 text-sm mb-2">With the blessings of</p>
-          {maternalGrandparents && (
-            <p className="font-serif text-bark/70 text-sm leading-snug mb-1">
-              {maternalGrandparents}
+          {paternalGrandparents && (
+            <p className="font-serif text-bark/70 text-md leading-snug">
+              {paternalGrandparents}
             </p>
           )}
-          {paternalGrandparents && (
-            <p className="font-serif text-bark/70 text-sm leading-snug">
-              {paternalGrandparents}
+          {maternalGrandparents && (
+            <p className="font-serif text-bark/70 text-md leading-snug mb-1">
+              {maternalGrandparents}
             </p>
           )}
         </div>
@@ -122,13 +122,29 @@ export default function OurStory() {
       <div className="invite-body relative z-10 max-w-xl mx-auto px-6 py-16 md:py-24 text-center">
 
         {/* ── Telugu invocation ── */}
-        <p
-          className="font-serif text-gold leading-snug mb-1"
-          style={{ fontSize: 'clamp(1.2rem, 3vw, 1.6rem)', letterSpacing: '0.04em' }}
-        >
-          శ్రీరస్తు &nbsp;|&nbsp; శుభమస్తు &nbsp;|&nbsp; అవిఘ్నమస్తు
-        </p>
-        <SmallCaps>Srirastu &nbsp;·&nbsp; Shubhamastu &nbsp;·&nbsp; Avighnamastu</SmallCaps>
+        <div className="flex items-start justify-center mb-1">
+          {[
+            { telugu: 'శ్రీరస్తు', roman: 'Srirastu', meaning: 'May prosperity prevail'      },
+            { telugu: 'శుభమస్తు', roman: 'Shubhamastu', meaning: 'May auspiciousness abound'   },
+            { telugu: 'అవిఘ్నమస్తు', roman: 'Avighnamastu', meaning: 'May there be no obstacles'   },
+          ].map(({ telugu, roman, meaning }, i, arr) => (
+            <span key={roman} className="flex items-start">
+              <span className="text-center px-3 md:px-5">
+                <span
+                  className="block font-serif text-gold leading-snug"
+                  style={{ fontSize: 'clamp(1rem, 2.5vw, 1.4rem)', letterSpacing: '0.04em' }}
+                >
+                  {telugu}
+                </span>
+                <span className="block font-sans text-[10px] tracking-widest uppercase text-bark/50 mt-1">{roman}</span>
+                <span className="block font-serif italic text-bark/50 text-sm mt-0.5">{meaning}</span>
+              </span>
+              {i < arr.length - 1 && (
+                <span className="text-gold/40 self-start mt-1" style={{ fontSize: 'clamp(1rem, 2.5vw, 1.4rem)' }}>|</span>
+              )}
+            </span>
+          ))}
+        </div>
 
         <GoldDivider wide />
 
@@ -141,9 +157,9 @@ export default function OurStory() {
         {/* ── Bride's family ── */}
         <FamilyBlock
           label="Bride's Family"
-          maternalGrandparents="Late Smt. [Maternal Grandmother] & Late Shri [Maternal Grandfather]"
-          paternalGrandparents="Late Smt. [Paternal Grandmother] & Late Shri [Paternal Grandfather]"
-          parents="Smt. Sridevi & Shri Krishna Prasad Madiraju"
+          maternalGrandparents="Smt. Jyothi Devi & Late Sri Ashok Rao Koti"
+          paternalGrandparents="Late Smt. Premalatha & Late Sri Subba Rao Madiraju"
+          parents="Smt. Sridevi & Sri Krishna Prasad Madiraju"
         />
 
         {/* "along with" connector */}
@@ -156,9 +172,9 @@ export default function OurStory() {
         {/* ── Groom's family ── */}
         <FamilyBlock
           label="Groom's Family"
-          maternalGrandparents="Late Smt. [Maternal Grandmother] & Late Shri [Maternal Grandfather]"
-          paternalGrandparents="Late Smt. Anasuya & Late Shri Srimannarayanacharyulu Gobburi"
-          parents="Smt. Sandhya & Late Shri Venkata Gobburi"
+          maternalGrandparents="Smt. Sujatha & Sri Seshaachaaryulu Kanduri"
+          paternalGrandparents="Smt. Seetha & Late Sri Narasimhaachaaryulu Gobburi"
+          parents="Smt. Sandhya & Late Sri Srimannarayanaachaaryulu Gobburi"
         />
 
         <GoldDivider wide />
@@ -171,9 +187,7 @@ export default function OurStory() {
 
         {/* ── Couple's names ── */}
         <p
-          className="font-script text-dustyRose leading-none"
-          style={{ fontSize: 'clamp(1rem, 3.5vw, 1.5rem)' }}
-        >
+          className="font-script text-dustyRose leading-none text-2xl">
           Chi. Sow. Snigdha Om Madiraju
         </p>
         <div className="flex items-center justify-center gap-4 my-2">
@@ -182,9 +196,7 @@ export default function OurStory() {
           <div className="h-px w-14 bg-gold/45" />
         </div>
         <p
-          className="font-script text-dustyRose leading-none mb-10"
-          style={{ fontSize: 'clamp(1rem, 3.5vw, 1.5rem)' }}
-        >
+          className="font-script text-dustyRose leading-none mb-10 text-2xl">
           Chi. Phani Pramod Gobburi
         </p>
 

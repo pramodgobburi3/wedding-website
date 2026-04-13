@@ -1,12 +1,11 @@
 import { useEffect, useRef } from 'react'
 import { gsap } from 'gsap'
-import { ScrollTrigger } from 'gsap/ScrollTrigger'
 import EventCard from '../Events/EventCard'
-import mandapImg from '../../assets/photos/mandap.png'
-import sangeetIcon  from '../../assets/photos/sangeet.png'
-import baraatIcon   from '../../assets/photos/baraat.png'
-import ceremonyIcon from '../../assets/photos/ceremony.png'
-import receptionIcon from '../../assets/photos/reception.png'
+import mandapImg from '../../assets/photos/mandap.webp'
+import sangeetIcon  from '../../assets/photos/sangeet.webp'
+import baraatIcon   from '../../assets/photos/baraat.webp'
+import ceremonyIcon from '../../assets/photos/ceremony.webp'
+import receptionIcon from '../../assets/photos/reception.webp'
 
 const EVENTS = [
   {
@@ -15,10 +14,11 @@ const EVENTS = [
     tagline: 'Music & Dance',
     date: 'August 14, 2026',
     time: 'Time TBD',
-    venue: 'Kogod Courtyard',
+    venue: 'Robert and Arlene Kogod Courtyard',
     dresscode: 'Festive Traditional',
     accent: '#C47E85',
     icon: sangeetIcon,
+    mapUrl: 'https://maps.google.com/?q=Kogod+Courtyard+Washington+DC',
   },
   {
     id: 'baraat',
@@ -26,10 +26,11 @@ const EVENTS = [
     tagline: 'The Grand Procession',
     date: 'August 15, 2026',
     time: 'Time TBD',
-    venue: 'Venue TBD',
+    venue: 'Waldorf Astoria DC',
     dresscode: 'Festive Traditional',
     accent: '#C9A87C',
     icon: baraatIcon,
+    mapUrl: 'https://maps.google.com/?q=Waldorf+Astoria+Washington+DC+1100+Pennsylvania+Ave+NW',
   },
   {
     id: 'ceremony',
@@ -41,6 +42,7 @@ const EVENTS = [
     dresscode: 'Formal Traditional',
     accent: '#5C7A4E',
     icon: ceremonyIcon,
+    mapUrl: 'https://maps.google.com/?q=Waldorf+Astoria+Washington+DC+1100+Pennsylvania+Ave+NW',
   },
   {
     id: 'reception',
@@ -52,6 +54,7 @@ const EVENTS = [
     dresscode: 'Black Tie or Traditional',
     accent: '#E8B4B8',
     icon: receptionIcon,
+    mapUrl: 'https://maps.google.com/?q=Andrew+W+Mellon+Auditorium+1301+Constitution+Ave+NW+Washington+DC',
   },
 ]
 

@@ -1,8 +1,31 @@
-import { useEffect, useCallback } from 'react'
+import { useEffect, useCallback, useState } from 'react'
 import { motion, AnimatePresence } from 'framer-motion'
+
+// Preload an image URL into the browser cache without rendering it
+function preload(url) {
+  if (!url) return
+  const img = new Image()
+  img.src = url
+}
 
 export default function Lightbox({ photos, selectedIndex, onClose, onNavigate }) {
   const photo = photos[selectedIndex]
+
+  // Track whether the full-res image has finished loading
+  const [fullLoaded, setFullLoaded] = useState(false)
+
+  // Reset loaded state whenever the photo changes
+  useEffect(() => {
+    setFullLoaded(false)
+  }, [selectedIndex])
+
+  // Preload adjacent full-res images in the background
+  useEffect(() => {
+    const prev = photos[(selectedIndex - 1 + photos.length) % photos.length]
+    const next = photos[(selectedIndex + 1) % photos.length]
+    preload(prev?.src)
+    preload(next?.src)
+  }, [selectedIndex, photos])
 
   const handlePrev = useCallback(() => {
     onNavigate((selectedIndex - 1 + photos.length) % photos.length)
@@ -53,12 +76,33 @@ export default function Lightbox({ photos, selectedIndex, onClose, onNavigate })
             exit={{ scale: 0.92, opacity: 0 }}
             transition={{ duration: 0.3, ease: 'easeOut' }}
           >
-            <img
-              src={photo.src}
-              alt={photo.alt}
-              className="max-h-[82vh] w-auto object-contain rounded-sm shadow-2xl"
-              style={{ maxWidth: '100%' }}
-            />
+            <div className="relative">
+              {/* Thumbnail — shown immediately (already cached from grid) */}
+              <img
+                src={photo.thumb || photo.src}
+                alt={photo.alt}
+                className="max-h-[82vh] w-auto object-contain rounded-sm shadow-2xl"
+                style={{ maxWidth: '100%', display: 'block' }}
+              />
+
+              {/* Full-res — loads silently, fades in over the thumbnail when ready */}
+              {photo.thumb && (
+                <img
+                  key={photo.src}
+                  src={photo.src}
+                  alt=""
+                  aria-hidden="true"
+                  onLoad={() => setFullLoaded(true)}
+                  className="absolute inset-0 max-h-[82vh] w-auto object-contain rounded-sm"
+                  style={{
+                    maxWidth: '100%',
+                    opacity: fullLoaded ? 1 : 0,
+                    transition: 'opacity 0.4s ease',
+                  }}
+                />
+              )}
+            </div>
+
             {/* Caption */}
             {photo.alt && (
               <p className="mt-3 font-serif italic text-ivory/60 text-sm text-center">

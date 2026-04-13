@@ -1,9 +1,6 @@
 import { useState, useRef, useEffect } from 'react'
 import { gsap } from 'gsap'
-import { ScrollTrigger } from 'gsap/ScrollTrigger'
-import { Player } from '@lottiefiles/react-lottie-player'
-import flowerBloomLottie from '../../assets/lottie/flower-bloom.json'
-import rsvpBg from '../../assets/photos/rsvp_background.jpg'
+import rsvpBg from '../../assets/photos/rsvp_background.webp'
 
 function RoseIcon() {
   return (
@@ -84,7 +81,6 @@ export default function RSVPForm() {
   })
   const [status, setStatus]   = useState('idle') // idle | submitting | success | error
   const [errors, setErrors]   = useState({})
-  const lottieRef             = useRef(null)
 
   function validate() {
     const errs = {}
@@ -161,15 +157,6 @@ export default function RSVPForm() {
           style={{ height: '120%', filter: 'grayscale(100%)', mixBlendMode: 'multiply', opacity: 0.15, willChange: 'transform' }}
         />
         <div className="max-w-md mx-auto text-center relative z-10">
-          <div className="flex justify-center mb-4" aria-hidden="true">
-            <Player
-              ref={lottieRef}
-              src={flowerBloomLottie}
-              style={{ width: 100, height: 100 }}
-              keepLastFrame
-              autoplay={false}
-            />
-          </div>
           <RoseIcon />
           <h2 className="font-serif text-3xl text-bark mb-3" style={{ fontWeight: 300 }}>
             Thank You!
@@ -275,7 +262,7 @@ export default function RSVPForm() {
 
           {/* Number of Guests */}
           <div className="mb-8">
-            <label htmlFor="guests" className={labelBase}>Number of Guests</label>
+            <label htmlFor="guests" className={labelBase}>Number attending (Please include children)</label>
             <select
               id="guests" name="guests"
               value={form.guests} onChange={handleChange}

@@ -6,8 +6,8 @@ import Hero from './components/Hero/Hero'
 import Footer from './components/Footer/Footer'
 import ScrollProgress from './components/shared/ScrollProgress'
 import BotanicalCursor from './components/shared/BotanicalCursor'
-import mandapHeaderImg from './assets/photos/mandap_header.png'
-import floralHeaderImg from './assets/photos/floral_header.png'
+import mandapHeaderImg from './assets/photos/mandap_header.webp'
+import floralHeaderImg from './assets/photos/floral_header.webp'
 
 gsap.registerPlugin(ScrollTrigger)
 
@@ -60,6 +60,8 @@ function SectionCard({ children, mandapHeader = false }) {
           src={mandapHeaderImg}
           alt=""
           aria-hidden="true"
+          width="2814"
+          height="1536"
           className="relative z-10 w-full h-auto block pointer-events-none select-none"
           style={{ marginTop: '-10%' }}
         />
@@ -86,6 +88,8 @@ function SectionCard({ children, mandapHeader = false }) {
         src={floralHeaderImg}
         alt=""
         aria-hidden="true"
+        width="2814"
+        height="1536"
         className="relative z-10 w-full h-auto block pointer-events-none select-none"
       />
       <div className="relative overflow-hidden" style={{ marginTop: '-25%', ...cardStyle }}>

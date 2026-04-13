@@ -332,7 +332,7 @@ function PaisleyCorner({ color, flip = false }) {
 
 // ─── Event card ───────────────────────────────────────────────────────────────
 
-export default function EventCard({ id, name, tagline, date, time, venue, dresscode, accent, icon, index }) {
+export default function EventCard({ id, name, tagline, date, time, venue, dresscode, accent, icon, mapUrl, index }) {
   const [flipped, setFlipped] = useState(false)
 
   return (
@@ -347,12 +347,12 @@ export default function EventCard({ id, name, tagline, date, time, venue, dressc
       <div
         className="relative w-full"
         style={{ perspective: '1200px', height: 340, cursor: 'none' }}
-        onMouseEnter={() => setFlipped(true)}
-        onMouseLeave={() => setFlipped(false)}
+        onPointerEnter={e => { if (e.pointerType === 'mouse') setFlipped(true) }}
+        onPointerLeave={e => { if (e.pointerType === 'mouse') setFlipped(false) }}
         onClick={() => setFlipped(f => !f)}
         role="button"
         tabIndex={0}
-        aria-label={`${name} — click to see details`}
+        aria-label={`${name} — tap to see details`}
         onKeyDown={e => e.key === 'Enter' && setFlipped(f => !f)}
       >
         <div
@@ -399,8 +399,10 @@ export default function EventCard({ id, name, tagline, date, time, venue, dressc
             <p className="font-script text-base mb-4" style={{ color: accent }}>
               {tagline}
             </p>
-            <p className="font-sans text-[10px] tracking-widest uppercase text-bark/30 absolute bottom-4">
-              Hover for details
+            <p className="font-sans text-[10px] tracking-widest uppercase text-bark/30 absolute bottom-4 pointer-events-none select-none">
+              <span className="hidden md:inline">Hover</span>
+              <span className="inline md:hidden">Tap</span>
+              {' '}for details
             </p>
           </div>
 
@@ -420,6 +422,21 @@ export default function EventCard({ id, name, tagline, date, time, venue, dressc
               <DetailRow label="Venue"  value={venue}     accent={accent} />
               <DetailRow label="Attire" value={dresscode} accent={accent} />
             </div>
+            {mapUrl && (
+              <a
+                href={mapUrl}
+                target="_blank"
+                rel="noopener noreferrer"
+                onClick={e => e.stopPropagation()}
+                className="inline-flex items-center gap-1.5 mt-5 font-sans text-[10px] tracking-widest uppercase transition-opacity duration-200 hover:opacity-70"
+                style={{ color: accent, cursor: 'pointer' }}
+              >
+                <svg viewBox="0 0 16 16" className="w-3 h-3 flex-shrink-0" fill="currentColor" aria-hidden="true">
+                  <path d="M8 1a4.5 4.5 0 0 0-4.5 4.5C3.5 9 8 15 8 15s4.5-6 4.5-9.5A4.5 4.5 0 0 0 8 1zm0 6a1.5 1.5 0 1 1 0-3 1.5 1.5 0 0 1 0 3z"/>
+                </svg>
+                Get Directions
+              </a>
+            )}
           </div>
         </div>
       </div>

@@ -9,6 +9,9 @@ function imgUrl(publicId, width = 800) {
   return `https://res.cloudinary.com/${CLOUD_NAME}/image/upload/w_${width},q_auto,f_auto/${publicId}`
 }
 
+// Cap full-res at 900px on mobile (screens ≤768px) — 1600px is wasted on phone displays
+const FULL_RES = typeof window !== 'undefined' && window.innerWidth <= 768 ? 900 : 1600
+
 function listUrl() {
   return `https://res.cloudinary.com/${CLOUD_NAME}/image/list/${TAG}.json`
 }
@@ -69,7 +72,7 @@ export default function Gallery() {
           resources.map((r, i) => ({
             id:      r.public_id,
             src:     imgUrl(r.public_id, 800),
-            fullSrc: imgUrl(r.public_id, 1600),
+            fullSrc: imgUrl(r.public_id, FULL_RES),
             alt:     `Snigdha & Pramod — photo ${i + 1}`,
           }))
         )
@@ -136,7 +139,7 @@ export default function Gallery() {
       {/* Lightbox */}
       {selectedIndex !== null && (
         <Lightbox
-          photos={photos.map((p) => ({ ...p, src: p.fullSrc }))}
+          photos={photos.map((p) => ({ ...p, src: p.fullSrc, thumb: p.src }))}
           selectedIndex={selectedIndex}
           onClose={() => setSelectedIndex(null)}
           onNavigate={setSelectedIndex}
