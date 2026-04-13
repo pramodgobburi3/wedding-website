@@ -163,14 +163,14 @@ export default function RSVPForm() {
           </h2>
           <p className="font-serif italic text-bark/65 text-lg leading-relaxed">
             Your RSVP has been received. We are overjoyed that you will be
-            joining us for our garden romance.
+            joining us for our celebration.
           </p>
           <div className="flex items-center justify-center gap-4 mt-6">
             <div className="h-px w-12 bg-gold/50" />
             <span className="text-gold">✦</span>
             <div className="h-px w-12 bg-gold/50" />
           </div>
-          <p className="font-sans font-light text-bark/40 text-sm mt-4">
+          <p className="font-sans font-light text-bark/70 text-md mt-4">
             With love, Snigdha &amp; Pramod
           </p>
         </div>

@@ -64,20 +64,20 @@ function RoseDivider() {
     >
       <line x1="0" y1="12" x2="68" y2="12" stroke="#C9A87C" strokeWidth="0.8" opacity="0.7" />
       <line x1="112" y1="12" x2="180" y2="12" stroke="#C9A87C" strokeWidth="0.8" opacity="0.7" />
-      {[0, 40, 80, 120, 160].map((deg, i) => (
+      {[0, 40, 80, 120, 160, 200, 240, 280, 320].map((deg, i) => (
         <ellipse
           key={i}
-          cx={90 + Math.cos((deg * Math.PI) / 180) * 8}
-          cy={12 + Math.sin((deg * Math.PI) / 180) * 8}
-          rx="4.5"
-          ry="8"
-          fill={i % 2 === 0 ? '#E8B4B8' : '#D9A8AC'}
+          cx={90 + Math.cos((deg * Math.PI) / 180) * 7}
+          cy={12 + Math.sin((deg * Math.PI) / 180) * 7}
+          rx="3.5"
+          ry="6.5"
+          fill={i % 2 === 0 ? '#E8B4B8' : '#C47E85'}
           opacity="0.8"
-          transform={`rotate(${deg} ${90 + Math.cos((deg * Math.PI) / 180) * 8} ${12 + Math.sin((deg * Math.PI) / 180) * 8})`}
+          transform={`rotate(${deg} ${90 + Math.cos((deg * Math.PI) / 180) * 7} ${12 + Math.sin((deg * Math.PI) / 180) * 7})`}
         />
       ))}
-      <circle cx="90" cy="12" r="4.5" fill="#C47E85" opacity="0.9" />
-      <circle cx="90" cy="12" r="2"   fill="#F4D6D8" />
+      <circle cx="90" cy="12" r="4"   fill="#C47E85" />
+      <circle cx="90" cy="12" r="1.8" fill="#F4D6D8" />
     </svg>
   )
 }
