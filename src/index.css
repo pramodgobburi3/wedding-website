@@ -5,10 +5,12 @@
 @layer base {
   html {
     scroll-behavior: smooth;
+    background-color: #2c4426;
   }
 
   body {
-    @apply bg-ivory font-sans text-bark;
+    background-color: #2c4426;
+    @apply font-sans text-bark;
     -webkit-font-smoothing: antialiased;
     -moz-osx-font-smoothing: grayscale;
   }
