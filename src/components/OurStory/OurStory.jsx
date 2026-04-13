@@ -150,8 +150,8 @@ export default function OurStory() {
 
         {/* ── Opening blessing ── */}
         <p className="font-serif italic text-bark/70 text-base md:text-lg leading-relaxed mb-8 px-2">
-          With the blessings of the Almighty<br />
-          and the gracious wishes of our elders
+          With the blessings of the Divine<br />
+          and the gracious wishes of friends and family
         </p>
 
         {/* ── Bride's family ── */}

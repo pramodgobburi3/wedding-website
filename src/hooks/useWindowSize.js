@@ -7,11 +7,18 @@ export default function useWindowSize() {
   })
 
   useEffect(() => {
+    let timer
     function handleResize() {
-      setSize({ width: window.innerWidth, height: window.innerHeight })
+      clearTimeout(timer)
+      timer = setTimeout(() => {
+        setSize({ width: window.innerWidth, height: window.innerHeight })
+      }, 150)
     }
     window.addEventListener('resize', handleResize)
-    return () => window.removeEventListener('resize', handleResize)
+    return () => {
+      window.removeEventListener('resize', handleResize)
+      clearTimeout(timer)
+    }
   }, [])
 
   return size
