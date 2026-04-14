@@ -6,49 +6,78 @@ const WEDDING_DATE = new Date('2026-08-16T10:57:00-04:00') // 10:57 AM Eastern
 
 // ─── Ripple animation ─────────────────────────────────────────────────────────
 
-// Two large ripple origins — like lotus pads disturbing the water surface
+// Ripple origins — two disturbance points, offset in time so bursts interleave
 const RIPPLE_ORIGINS = [
-  { x: '38%', y: '64%', delay: 0,    maxR: 420, color: 'rgba(201,168,124,0.5)' },
-  { x: '63%', y: '72%', delay: 0.8,  maxR: 380, color: 'rgba(232,180,184,0.45)' },
+  { x: '38%', y: '64%', delay: 0,   color: 'rgba(201,168,124,0.65)' },
+  { x: '63%', y: '72%', delay: 3.8, color: 'rgba(232,180,184,0.60)' },
 ]
 
-function RippleRing({ delay, diameter, color }) {
+// Tuning
+const RING_COUNT    = 6      // rings per burst
+const RING_STAGGER  = 0.52   // seconds between successive rings in a burst
+const RING_DURATION = 4.6    // seconds for one ring to fully expand and vanish
+const CYCLE_PERIOD  = 9.5    // seconds between burst starts (must be > RING_DURATION)
+const REPEAT_DELAY  = CYCLE_PERIOD - RING_DURATION
+
+// Each ring expands as a squashed ellipse (width:height ≈ 2.5:1) to simulate
+// a water surface seen at a shallow angle. Outer rings travel farther.
+function RippleRing({ index, color, originDelay }) {
+  const delay  = originDelay + index * RING_STAGGER
+  const maxW   = (110 + index * 72) * 2     // 220 → 1070 px diameter
+  const maxH   = maxW * 0.40               // ~23° viewing angle
+
   return (
     <motion.div
       className="absolute rounded-full"
       style={{
         left: '50%', top: '50%',
         translateX: '-50%', translateY: '-50%',
-        border: `1px solid ${color}`,
-        width: 10, height: 10,
+        width: 6, height: 3,
+        border: '1px solid ' + color,
+        willChange: 'transform, opacity',
       }}
-      animate={{ width: diameter, height: diameter, opacity: [0.85, 0.4, 0] }}
-      transition={{ delay, duration: 3.6, ease: [0.08, 0.5, 0.25, 1] }}
+      animate={{
+        width:   maxW,
+        height:  maxH,
+        opacity: [0, 1, 0.55, 0],
+      }}
+      transition={{
+        delay,
+        duration:    RING_DURATION,
+        // Fast initial burst then decelerates to a crawl — just like real water
+        ease:        [0.03, 0.18, 0.55, 1],
+        repeat:      Infinity,
+        repeatDelay: REPEAT_DELAY,
+        opacity: {
+          times:       [0, 0.06, 0.45, 1],   // flash in, linger, fade out
+          ease:        'linear',
+          duration:    RING_DURATION,
+          delay,
+          repeat:      Infinity,
+          repeatDelay: REPEAT_DELAY,
+        },
+      }}
     />
   )
 }
 
-function LotusRippleOrigin({ x, y, delay, maxR, color }) {
+function LotusRippleOrigin({ x, y, delay, color }) {
   return (
     <div className="absolute" style={{ left: x, top: y }}>
-      <RippleRing delay={delay}       diameter={maxR * 2}    color={color} />
-      <RippleRing delay={delay + 0.6} diameter={maxR * 1.1}  color={color} />
+      {Array.from({ length: RING_COUNT }, (_, i) => (
+        <RippleRing key={i} index={i} color={color} originDelay={delay} />
+      ))}
     </div>
   )
 }
 
 function LotusRipples() {
   return (
-    <motion.div
-      className="absolute inset-0 z-20 pointer-events-none overflow-hidden"
-      initial={{ opacity: 1 }}
-      animate={{ opacity: 0 }}
-      transition={{ delay: 3.2, duration: 1.0 }}
-    >
+    <div className="absolute inset-0 z-20 pointer-events-none overflow-hidden">
       {RIPPLE_ORIGINS.map((o, i) => (
         <LotusRippleOrigin key={i} {...o} />
       ))}
-    </motion.div>
+    </div>
   )
 }
 
