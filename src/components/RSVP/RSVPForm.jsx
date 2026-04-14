@@ -41,7 +41,7 @@ const inputBase =
   'w-full bg-transparent border-b-2 border-dustyRose/30 focus:border-dustyRose outline-none py-2 font-sans text-bark placeholder-bark/35 transition-colors duration-200 text-base'
 
 const labelBase =
-  'block font-sans text-xs tracking-widest uppercase text-bark/50 mb-1'
+  'block font-sans text-xs tracking-widest uppercase text-bark/90 mb-1'
 
 const EVENTS = [
   { id: 'sangeet',   label: 'Sangeet',          date: 'Friday, August 14' },
@@ -290,7 +290,7 @@ export default function RSVPForm() {
                     onClick={() => handleEventToggle(id)}
                     className="flex items-center gap-3 text-left px-4 py-3 rounded border transition-all duration-200"
                     style={{
-                      borderColor: checked ? 'rgba(196,126,133,0.7)' : 'rgba(196,126,133,0.2)',
+                      borderColor: checked ? 'rgba(196,126,133,0.9)' : 'rgba(196,126,133,0.4)',
                       backgroundColor: checked ? 'rgba(196,126,133,0.08)' : 'transparent',
                     }}
                   >
@@ -298,7 +298,7 @@ export default function RSVPForm() {
                     <span
                       className="flex-shrink-0 w-4 h-4 rounded-sm border flex items-center justify-center transition-colors duration-200"
                       style={{
-                        borderColor: checked ? '#C47E85' : 'rgba(196,126,133,0.4)',
+                        borderColor: checked ? '#C47E85' : 'rgba(196,126,133,0.7)',
                         backgroundColor: checked ? '#C47E85' : 'transparent',
                       }}
                       aria-hidden="true"
@@ -310,8 +310,8 @@ export default function RSVPForm() {
                       )}
                     </span>
                     <span>
-                      <span className="block font-serif text-bark text-sm">{label}</span>
-                      <span className="block font-sans text-[10px] tracking-widest uppercase text-bark/45">{date}</span>
+                      <span className="block font-serif text-bark text-sm font-bold">{label}</span>
+                      <span className="block font-sans text-[10px] tracking-widest uppercase text-bark/90">{date}</span>
                     </span>
                   </button>
                 )
