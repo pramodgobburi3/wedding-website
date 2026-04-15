@@ -201,7 +201,7 @@ export default function RSVPForm() {
             <div className="h-px w-16 bg-gold/50" />
           </div>
           <p className="font-serif italic text-bark/55 mt-4 text-lg">
-            We can't wait to celebrate our garden romance with you —
+            We can't wait to celebrate our special day with you —
             please let us know you're coming!
           </p>
         </div>
