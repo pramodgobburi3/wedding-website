@@ -6,8 +6,8 @@ import Hero from './components/Hero/Hero'
 import Footer from './components/Footer/Footer'
 import ScrollProgress from './components/shared/ScrollProgress'
 import BotanicalCursor from './components/shared/BotanicalCursor'
-import mandapHeaderImg from './assets/photos/mandap_header.webp'
-import floralHeaderImg from './assets/photos/floral_header.webp'
+import mandapHeaderImg from './assets/photos/mandap.svg'
+import floralHeaderImg from './assets/photos/floral.svg'
 
 gsap.registerPlugin(ScrollTrigger)
 
