@@ -15,7 +15,10 @@ function formatEventTime(timeStr) {
 }
 
 function normalizePhone(raw) {
-  return raw.replace(/\D/g, '')
+  const digits = raw.replace(/\D/g, '')
+  if (raw.trim().startsWith('+') && digits.length > 10) return digits.slice(-10)
+  if (digits.length === 11 && digits.startsWith('1')) return digits.slice(1)
+  return digits
 }
 
 // ─── Shared UI ────────────────────────────────────────────────────────────────

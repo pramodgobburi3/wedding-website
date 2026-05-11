@@ -1,9 +1,51 @@
-import { useState, useEffect, Fragment } from 'react'
+import { useState, useEffect, Fragment, useRef } from 'react'
 import { supabase } from '../../lib/supabase'
 import { BLANK_GUEST } from '../lib/constants'
 import { normalizePhone, groupLabel } from '../lib/utils'
 import { Btn } from '../components/ui'
 import GuestFormFields from '../components/GuestFormFields'
+
+function parseCSVLine(line) {
+  const fields = []
+  let field = ''
+  let inQuotes = false
+  for (let i = 0; i < line.length; i++) {
+    const ch = line[i]
+    if (ch === '"') {
+      inQuotes = !inQuotes
+    } else if (ch === ',' && !inQuotes) {
+      fields.push(field.trim())
+      field = ''
+    } else {
+      field += ch
+    }
+  }
+  fields.push(field.trim())
+  return fields
+}
+
+function parseCSV(text) {
+  const lines = text.trim().split(/\r?\n/)
+  if (lines.length < 2) return []
+  const headers = parseCSVLine(lines[0]).map(h => h.toLowerCase())
+  return lines.slice(1).filter(l => l.trim()).map(line => {
+    const vals = parseCSVLine(line)
+    return Object.fromEntries(headers.map((h, i) => [h, vals[i] ?? '']))
+  })
+}
+
+function validateRows(rows, groups) {
+  return rows.map(row => {
+    const name = row.name?.trim()
+    const normalizedInput = row.group?.toLowerCase().trim().replace(/\s+/g, '_')
+    const group = groups.find(g => g.name.toLowerCase() === normalizedInput)
+    const phones = (row.phones ?? '').split(',').map(normalizePhone).filter(Boolean)
+    let error = null
+    if (!name) error = 'Missing name'
+    else if (!group) error = `Unknown group "${row.group}"`
+    return { name, groupName: row.group?.trim(), group, phones, error }
+  })
+}
 
 export default function GuestsView() {
   const [guests, setGuests]           = useState([])
@@ -17,6 +59,11 @@ export default function GuestsView() {
   const [addForm, setAddForm]         = useState(BLANK_GUEST)
   const [phoneInputs, setPhoneInputs] = useState({})
   const [error, setError]             = useState(null)
+  const [showImport, setShowImport]   = useState(false)
+  const [importPreview, setImportPreview] = useState([])
+  const [importing, setImporting]     = useState(false)
+  const [importResult, setImportResult]  = useState(null)
+  const fileInputRef                  = useRef(null)
 
   async function load() {
     const [{ data: g, error: ge }, { data: grps }, { data: evts }] = await Promise.all([
@@ -105,6 +152,52 @@ export default function GuestsView() {
     load()
   }
 
+  function handleFileSelect(e) {
+    const file = e.target.files[0]
+    if (!file) return
+    const reader = new FileReader()
+    reader.onload = ev => {
+      const rows = parseCSV(ev.target.result)
+      setImportPreview(validateRows(rows, groups))
+      setImportResult(null)
+    }
+    reader.readAsText(file)
+  }
+
+  async function handleImport() {
+    const valid = importPreview.filter(r => !r.error)
+    setImporting(true)
+
+    try {
+      // Bulk insert all guests in one request, get back IDs in insertion order
+      const { data: insertedGuests, error: gErr } = await supabase
+        .from('guests')
+        .insert(valid.map(row => ({ name: row.name, group_id: row.group.id })))
+        .select('id')
+      if (gErr) throw gErr
+
+      // Build phone rows using the returned IDs (order matches insertion order)
+      const phoneRows = insertedGuests.flatMap((guest, i) =>
+        valid[i].phones.map(phone => ({ guest_id: guest.id, phone }))
+      )
+
+      // Bulk insert all phones in one request
+      if (phoneRows.length) {
+        const { error: pErr } = await supabase.from('guest_phones').insert(phoneRows)
+        if (pErr) throw pErr
+      }
+
+      setImportResult({ ok: insertedGuests.length, errors: [] })
+      setImportPreview([])
+      if (fileInputRef.current) fileInputRef.current.value = ''
+      load()
+    } catch (err) {
+      setImportResult({ ok: 0, errors: [err.message] })
+    } finally {
+      setImporting(false)
+    }
+  }
+
   function startEdit(guest) {
     setEditingId(guest.id)
     setExpandedId(guest.id)
@@ -122,10 +215,84 @@ export default function GuestsView() {
     <div>
       <div className="flex items-center justify-between mb-4">
         <p className="text-sm text-gray-500">{guests.length} guests</p>
-        <Btn variant="primary" onClick={() => setShowAdd(v => !v)}>+ Add guest</Btn>
+        <div className="flex gap-2">
+          <Btn variant="secondary" onClick={() => { setShowImport(v => !v); setImportPreview([]); setImportResult(null) }}>
+            Import CSV
+          </Btn>
+          <Btn variant="primary" onClick={() => setShowAdd(v => !v)}>+ Add guest</Btn>
+        </div>
       </div>
 
       {error && <p className="text-xs text-red-500 mb-3">{error}</p>}
+
+      {showImport && (
+        <div className="bg-white border border-gray-200 rounded-lg p-4 mb-4 space-y-4">
+          <div className="flex items-start justify-between">
+            <div>
+              <p className="text-sm font-medium text-gray-800">Import guests from CSV</p>
+              <p className="text-xs text-gray-400 mt-0.5">
+                Required columns: <span className="font-mono">name, group, phones</span> — phones can be comma-separated inside quotes.
+                Group names match case-insensitively (e.g. "Family Friends" → family_friends).
+              </p>
+            </div>
+          </div>
+
+          <input
+            ref={fileInputRef}
+            type="file"
+            accept=".csv,text/csv"
+            onChange={handleFileSelect}
+            className="text-sm text-gray-600 file:mr-3 file:py-1 file:px-3 file:rounded file:border file:border-gray-300 file:text-xs file:text-gray-600 file:bg-gray-50 hover:file:bg-gray-100"
+          />
+
+          {importPreview.length > 0 && (
+            <div className="overflow-x-auto">
+              <table className="w-full text-xs">
+                <thead>
+                  <tr className="text-left text-gray-500 border-b border-gray-100">
+                    <th className="py-1.5 pr-4 font-medium">Name</th>
+                    <th className="py-1.5 pr-4 font-medium">Group</th>
+                    <th className="py-1.5 pr-4 font-medium">Phones</th>
+                    <th className="py-1.5 font-medium">Status</th>
+                  </tr>
+                </thead>
+                <tbody className="divide-y divide-gray-50">
+                  {importPreview.map((row, i) => (
+                    <tr key={i} className={row.error ? 'text-gray-400' : 'text-gray-700'}>
+                      <td className="py-1.5 pr-4">{row.name || <span className="italic">—</span>}</td>
+                      <td className="py-1.5 pr-4">{row.groupName}</td>
+                      <td className="py-1.5 pr-4">{row.phones.length ? row.phones.join(', ') : <span className="italic text-gray-300">none</span>}</td>
+                      <td className="py-1.5">
+                        {row.error
+                          ? <span className="text-red-500">{row.error}</span>
+                          : <span className="text-green-600">✓</span>}
+                      </td>
+                    </tr>
+                  ))}
+                </tbody>
+              </table>
+            </div>
+          )}
+
+          {importResult && (
+            <div className={`text-xs p-3 rounded ${importResult.errors.length ? 'bg-yellow-50 text-yellow-800' : 'bg-green-50 text-green-800'}`}>
+              <p>{importResult.ok} guest{importResult.ok !== 1 ? 's' : ''} imported successfully.</p>
+              {importResult.errors.map((e, i) => <p key={i} className="mt-0.5 text-red-600">{e}</p>)}
+            </div>
+          )}
+
+          {importPreview.some(r => !r.error) && (
+            <div className="flex gap-2">
+              <Btn variant="primary" onClick={handleImport} disabled={importing}>
+                {importing ? 'Importing…' : `Import ${importPreview.filter(r => !r.error).length} valid guest${importPreview.filter(r => !r.error).length !== 1 ? 's' : ''}`}
+              </Btn>
+              <Btn variant="secondary" onClick={() => { setImportPreview([]); setImportResult(null); if (fileInputRef.current) fileInputRef.current.value = '' }}>
+                Clear
+              </Btn>
+            </div>
+          )}
+        </div>
+      )}
 
       {showAdd && (
         <form onSubmit={handleAdd} className="bg-white border border-gray-200 rounded-lg p-4 mb-4 space-y-3">
