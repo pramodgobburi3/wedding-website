@@ -157,8 +157,8 @@ export default function OurStory() {
         {/* ── Bride's family ── */}
         <FamilyBlock
           label="Bride's Family"
-          maternalGrandparents="Smt. Jyothi Devi & Late Sri Ashok Rao Koti"
-          paternalGrandparents="Late Smt. Premalatha & Late Sri Subba Rao Madiraju"
+          // maternalGrandparents="Smt. Jyothi Devi & Late Sri Ashok Rao Koti"
+          // paternalGrandparents="Late Smt. Premalatha & Late Sri Subba Rao Madiraju"
           parents="Smt. Sridevi & Sri Krishna Prasad Madiraju"
         />
 
@@ -172,8 +172,8 @@ export default function OurStory() {
         {/* ── Groom's family ── */}
         <FamilyBlock
           label="Groom's Family"
-          maternalGrandparents="Smt. Sujatha & Sri Seshaachaaryulu Kanduri"
-          paternalGrandparents="Smt. Seetha & Late Sri Narasimhaachaaryulu Gobburi"
+          // maternalGrandparents="Smt. Sujatha & Sri Seshaachaaryulu Kanduri"
+          // paternalGrandparents="Smt. Seetha & Late Sri Narasimhaachaaryulu Gobburi"
           parents="Smt. Sandhya & Late Sri Srimannarayanaachaaryulu Gobburi"
         />
 

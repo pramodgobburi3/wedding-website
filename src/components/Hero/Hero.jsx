@@ -1,5 +1,6 @@
 import { useState, useEffect, useRef } from 'react'
 import { motion, useScroll, useTransform, useReducedMotion } from 'framer-motion'
+import { FLAGS } from '../../featureFlags'
 
 // TODO: Set your wedding date here
 const WEDDING_DATE = new Date('2026-08-16T10:57:00-04:00') // 10:57 AM Eastern
@@ -254,12 +255,21 @@ export default function Hero() {
           >
             Gallery
           </a>
-          <a
-            href="#rsvp"
-            className="inline-block font-sans text-xs tracking-[0.25em] uppercase px-10 py-3.5 rounded-full bg-dustyRose hover:bg-dustyRose-dark text-ivory transition-all duration-300"
-          >
-            RSVP
-          </a>
+          {FLAGS.rsvpEnabled ? (
+            <a
+              href="#rsvp"
+              className="inline-block font-sans text-xs tracking-[0.25em] uppercase px-10 py-3.5 rounded-full bg-dustyRose hover:bg-dustyRose-dark text-ivory transition-all duration-300"
+            >
+              RSVP
+            </a>
+          ) : (
+            <span
+              title="RSVPs opening soon"
+              className="inline-block font-sans text-xs tracking-[0.25em] uppercase px-10 py-3.5 rounded-full bg-dustyRose/30 text-ivory/40 cursor-not-allowed select-none"
+            >
+              RSVP Coming Soon
+            </span>
+          )}
         </motion.div>
       </div>
 

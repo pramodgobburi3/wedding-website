@@ -17,10 +17,16 @@
 
   /* Hide OS cursor on desktop for custom botanical cursor */
   @media (hover: hover) and (pointer: fine) {
-    body {
+    body:not(:has(#admin-root)) {
       cursor: none;
     }
-    a, button, [role="button"], select, input, textarea, label {
+    body:not(:has(#admin-root)) a,
+    body:not(:has(#admin-root)) button,
+    body:not(:has(#admin-root)) [role="button"],
+    body:not(:has(#admin-root)) select,
+    body:not(:has(#admin-root)) input,
+    body:not(:has(#admin-root)) textarea,
+    body:not(:has(#admin-root)) label {
       cursor: none;
     }
   }

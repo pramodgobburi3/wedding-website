@@ -1,0 +1,180 @@
+<?xml version="1.0" encoding="UTF-8"?>
+<!--
+  Rose / Lotus flower — Snigdha & Pramod wedding
+  Exact SVG translation of createDetailedRoseTexture() in src/utils/botanicalTextures.js
+  Canvas: 256×256, flower centre: (128,128)
+
+  Layer structure (outside → in):
+    Layer 0 — 8 petals, r=90,  rx=25.2  ry=46.8  offset=0°
+    Layer 1 — 6 petals, r=68,  rx=19.04 ry=35.36 offset=30°
+    Layer 2 — 5 petals, r=48,  rx=13.44 ry=24.96 offset=0°
+    Layer 3 — 4 petals, r=30,  rx=8.4   ry=15.6  offset=45°
+    Centre  — circle r=18
+
+  Petal placement formula (from JS source):
+    px = 128 + cos(angle) * r * 0.45
+    py = 128 + sin(angle) * r * 0.45
+    rotation = (angle + 90°)
+
+  Gradient: radialGradient from petal centre (stop 0%) → petal edge (stop 100%)
+  Colours match petalColors[][] array in botanicalTextures.js exactly.
+-->
+<svg xmlns="http://www.w3.org/2000/svg"
+     viewBox="0 0 256 256" width="512" height="512">
+  <defs>
+
+    <!-- Layer 0 gradient: rgba(196,126,133,0.85) → rgba(232,180,184,0.60) -->
+    <radialGradient id="g0" cx="50%" cy="50%" r="60%">
+      <stop offset="0%"   stop-color="#C47E85" stop-opacity="0.85"/>
+      <stop offset="100%" stop-color="#E8B4B8" stop-opacity="0.60"/>
+    </radialGradient>
+
+    <!-- Layer 1 gradient: rgba(232,180,184,0.90) → rgba(248,210,214,0.70) -->
+    <radialGradient id="g1" cx="50%" cy="50%" r="60%">
+      <stop offset="0%"   stop-color="#E8B4B8" stop-opacity="0.90"/>
+      <stop offset="100%" stop-color="#F8D2D6" stop-opacity="0.70"/>
+    </radialGradient>
+
+    <!-- Layer 2 gradient: rgba(217,168,172,0.95) → rgba(248,224,226,0.80) -->
+    <radialGradient id="g2" cx="50%" cy="50%" r="60%">
+      <stop offset="0%"   stop-color="#D9A8AC" stop-opacity="0.95"/>
+      <stop offset="100%" stop-color="#F8E0E2" stop-opacity="0.80"/>
+    </radialGradient>
+
+    <!-- Layer 3 gradient: rgba(248,210,214,1.00) → rgba(255,235,237,0.90) -->
+    <radialGradient id="g3" cx="50%" cy="50%" r="60%">
+      <stop offset="0%"   stop-color="#F8D2D6" stop-opacity="1.00"/>
+      <stop offset="100%" stop-color="#FFEBEF" stop-opacity="0.90"/>
+    </radialGradient>
+
+    <!-- Centre gradient: rgba(248,220,224,1) → rgba(196,126,133,0.80) -->
+    <radialGradient id="gc" cx="40%" cy="40%" r="65%">
+      <stop offset="0%"   stop-color="#F8DCE0" stop-opacity="1.00"/>
+      <stop offset="100%" stop-color="#C47E85" stop-opacity="0.80"/>
+    </radialGradient>
+
+  </defs>
+
+  <!-- ═══════════════════════════════════════════════════════════════
+       LAYER 0 — 8 petals, r=90, rx=25.2, ry=46.8, offset angle=0°
+       angle step = 45°,  petal rotation = angle+90°
+  ════════════════════════════════════════════════════════════════ -->
+
+  <!-- i=0  angle=0°   px=168.50 py=128.00  rot=90°  -->
+  <g transform="translate(168.50,128.00)">
+    <ellipse cx="0" cy="0" rx="25.2" ry="46.8" transform="rotate(90)"  fill="url(#g0)"/>
+  </g>
+  <!-- i=1  angle=45°  px=156.64 py=156.64  rot=135° -->
+  <g transform="translate(156.64,156.64)">
+    <ellipse cx="0" cy="0" rx="25.2" ry="46.8" transform="rotate(135)" fill="url(#g0)"/>
+  </g>
+  <!-- i=2  angle=90°  px=128.00 py=168.50  rot=180° -->
+  <g transform="translate(128.00,168.50)">
+    <ellipse cx="0" cy="0" rx="25.2" ry="46.8" transform="rotate(180)" fill="url(#g0)"/>
+  </g>
+  <!-- i=3  angle=135° px=99.36  py=156.64  rot=225° -->
+  <g transform="translate(99.36,156.64)">
+    <ellipse cx="0" cy="0" rx="25.2" ry="46.8" transform="rotate(225)" fill="url(#g0)"/>
+  </g>
+  <!-- i=4  angle=180° px=87.50  py=128.00  rot=270° -->
+  <g transform="translate(87.50,128.00)">
+    <ellipse cx="0" cy="0" rx="25.2" ry="46.8" transform="rotate(270)" fill="url(#g0)"/>
+  </g>
+  <!-- i=5  angle=225° px=99.36  py=99.36   rot=315° -->
+  <g transform="translate(99.36,99.36)">
+    <ellipse cx="0" cy="0" rx="25.2" ry="46.8" transform="rotate(315)" fill="url(#g0)"/>
+  </g>
+  <!-- i=6  angle=270° px=128.00 py=87.50   rot=0°   -->
+  <g transform="translate(128.00,87.50)">
+    <ellipse cx="0" cy="0" rx="25.2" ry="46.8" transform="rotate(0)"   fill="url(#g0)"/>
+  </g>
+  <!-- i=7  angle=315° px=156.64 py=99.36   rot=45°  -->
+  <g transform="translate(156.64,99.36)">
+    <ellipse cx="0" cy="0" rx="25.2" ry="46.8" transform="rotate(45)"  fill="url(#g0)"/>
+  </g>
+
+  <!-- ═══════════════════════════════════════════════════════════════
+       LAYER 1 — 6 petals, r=68, rx=19.04, ry=35.36, offset=30°
+       angle step = 60°,  petal rotation = angle+90°
+  ════════════════════════════════════════════════════════════════ -->
+
+  <!-- i=0  angle=30°  px=154.50 py=143.30  rot=120° -->
+  <g transform="translate(154.50,143.30)">
+    <ellipse cx="0" cy="0" rx="19.04" ry="35.36" transform="rotate(120)" fill="url(#g1)"/>
+  </g>
+  <!-- i=1  angle=90°  px=128.00 py=158.60  rot=180° -->
+  <g transform="translate(128.00,158.60)">
+    <ellipse cx="0" cy="0" rx="19.04" ry="35.36" transform="rotate(180)" fill="url(#g1)"/>
+  </g>
+  <!-- i=2  angle=150° px=101.50 py=143.30  rot=240° -->
+  <g transform="translate(101.50,143.30)">
+    <ellipse cx="0" cy="0" rx="19.04" ry="35.36" transform="rotate(240)" fill="url(#g1)"/>
+  </g>
+  <!-- i=3  angle=210° px=101.50 py=112.70  rot=300° -->
+  <g transform="translate(101.50,112.70)">
+    <ellipse cx="0" cy="0" rx="19.04" ry="35.36" transform="rotate(300)" fill="url(#g1)"/>
+  </g>
+  <!-- i=4  angle=270° px=128.00 py=97.40   rot=0°   -->
+  <g transform="translate(128.00,97.40)">
+    <ellipse cx="0" cy="0" rx="19.04" ry="35.36" transform="rotate(0)"   fill="url(#g1)"/>
+  </g>
+  <!-- i=5  angle=330° px=154.50 py=112.70  rot=60°  -->
+  <g transform="translate(154.50,112.70)">
+    <ellipse cx="0" cy="0" rx="19.04" ry="35.36" transform="rotate(60)"  fill="url(#g1)"/>
+  </g>
+
+  <!-- ═══════════════════════════════════════════════════════════════
+       LAYER 2 — 5 petals, r=48, rx=13.44, ry=24.96, offset=0°
+       angle step = 72°,  petal rotation = angle+90°
+  ════════════════════════════════════════════════════════════════ -->
+
+  <!-- i=0  angle=0°   px=149.60 py=128.00  rot=90°  -->
+  <g transform="translate(149.60,128.00)">
+    <ellipse cx="0" cy="0" rx="13.44" ry="24.96" transform="rotate(90)"  fill="url(#g2)"/>
+  </g>
+  <!-- i=1  angle=72°  px=134.67 py=148.54  rot=162° -->
+  <g transform="translate(134.67,148.54)">
+    <ellipse cx="0" cy="0" rx="13.44" ry="24.96" transform="rotate(162)" fill="url(#g2)"/>
+  </g>
+  <!-- i=2  angle=144° px=110.53 py=140.70  rot=234° -->
+  <g transform="translate(110.53,140.70)">
+    <ellipse cx="0" cy="0" rx="13.44" ry="24.96" transform="rotate(234)" fill="url(#g2)"/>
+  </g>
+  <!-- i=3  angle=216° px=110.53 py=115.30  rot=306° -->
+  <g transform="translate(110.53,115.30)">
+    <ellipse cx="0" cy="0" rx="13.44" ry="24.96" transform="rotate(306)" fill="url(#g2)"/>
+  </g>
+  <!-- i=4  angle=288° px=134.67 py=107.46  rot=18°  -->
+  <g transform="translate(134.67,107.46)">
+    <ellipse cx="0" cy="0" rx="13.44" ry="24.96" transform="rotate(18)"  fill="url(#g2)"/>
+  </g>
+
+  <!-- ═══════════════════════════════════════════════════════════════
+       LAYER 3 — 4 petals, r=30, rx=8.4, ry=15.6, offset=45°
+       angle step = 90°,  petal rotation = angle+90°
+  ════════════════════════════════════════════════════════════════ -->
+
+  <!-- i=0  angle=45°  px=137.54 py=137.54  rot=135° -->
+  <g transform="translate(137.54,137.54)">
+    <ellipse cx="0" cy="0" rx="8.4" ry="15.6" transform="rotate(135)" fill="url(#g3)"/>
+  </g>
+  <!-- i=1  angle=135° px=118.46 py=137.54  rot=225° -->
+  <g transform="translate(118.46,137.54)">
+    <ellipse cx="0" cy="0" rx="8.4" ry="15.6" transform="rotate(225)" fill="url(#g3)"/>
+  </g>
+  <!-- i=2  angle=225° px=118.46 py=118.46  rot=315° -->
+  <g transform="translate(118.46,118.46)">
+    <ellipse cx="0" cy="0" rx="8.4" ry="15.6" transform="rotate(315)" fill="url(#g3)"/>
+  </g>
+  <!-- i=3  angle=315° px=137.54 py=118.46  rot=45°  -->
+  <g transform="translate(137.54,118.46)">
+    <ellipse cx="0" cy="0" rx="8.4" ry="15.6" transform="rotate(45)"  fill="url(#g3)"/>
+  </g>
+
+  <!-- ═══════════════════════════════════════════════════════════════
+       CENTRE — circle r=18
+       Gradient: rgba(248,220,224,1) centre → rgba(196,126,133,0.8) edge
+  ════════════════════════════════════════════════════════════════ -->
+  <circle cx="128" cy="128" r="18" fill="url(#gc)"/>
+
+</svg>

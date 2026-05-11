@@ -13,31 +13,31 @@ const EVENTS = [
     name: 'Sangeet',
     tagline: 'Music & Dance',
     date: 'August 14, 2026',
-    time: 'Time TBD',
+    time: '6:30 PM',
     venue: 'Robert and Arlene Kogod Courtyard',
     dresscode: 'Festive Traditional',
     accent: '#C47E85',
     icon: sangeetIcon,
     mapUrl: 'https://maps.google.com/?q=Kogod+Courtyard+Washington+DC',
   },
-  {
-    id: 'baraat',
-    name: 'Baraat',
-    tagline: 'The Grand Procession',
-    date: 'August 15, 2026',
-    time: 'Time TBD',
-    venue: 'Waldorf Astoria DC',
-    dresscode: 'Festive Traditional',
-    accent: '#C9A87C',
-    icon: baraatIcon,
-    mapUrl: 'https://maps.google.com/?q=Waldorf+Astoria+Washington+DC+1100+Pennsylvania+Ave+NW',
-  },
+  // {
+  //   id: 'baraat',
+  //   name: 'Baraat',
+  //   tagline: 'The Grand Procession',
+  //   date: 'August 15, 2026',
+  //   time: 'Time TBD',
+  //   venue: 'Waldorf Astoria DC',
+  //   dresscode: 'Festive Traditional',
+  //   accent: '#C9A87C',
+  //   icon: baraatIcon,
+  //   mapUrl: 'https://maps.google.com/?q=Waldorf+Astoria+Washington+DC+1100+Pennsylvania+Ave+NW',
+  // },
   {
     id: 'ceremony',
     name: 'Wedding Ceremony',
     tagline: 'The Sacred Union',
     date: 'August 16, 2026',
-    time: '10:57 AM ET',
+    time: '8:30 AM',
     venue: 'Presidential Ballroom, Waldorf Astoria DC',
     dresscode: 'Formal Traditional',
     accent: '#5C7A4E',
@@ -49,7 +49,7 @@ const EVENTS = [
     name: 'Reception',
     tagline: 'Celebrate with Us',
     date: 'August 16, 2026',
-    time: 'Time TBD',
+    time: '6 PM',
     venue: 'Andrew W. Mellon Auditorium',
     dresscode: 'Black Tie or Traditional',
     accent: '#E8B4B8',
@@ -116,14 +116,14 @@ export default function Celebrations() {
         </div>
 
         {/* Cards grid — 1 col mobile → 2 cols sm → 4 cols lg */}
-        <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-4 gap-6 justify-items-center">
+        <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-3 gap-6 justify-items-center">
           {EVENTS.map((event, i) => (
             <EventCard key={event.id} {...event} index={i} />
           ))}
         </div>
 
         <p className="text-center font-sans text-xs text-bark/35 tracking-widest uppercase mt-10">
-          All event details will be updated as the date approaches
+          All times are in Eastern Time
         </p>
       </div>
     </section>

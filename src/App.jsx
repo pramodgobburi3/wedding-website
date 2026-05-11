@@ -1,4 +1,4 @@
-import { lazy, Suspense, useRef, useEffect } from 'react'
+import { lazy, Suspense, useRef, useEffect, useState } from 'react'
 import { motion } from 'framer-motion'
 import { gsap } from 'gsap'
 import { ScrollTrigger } from 'gsap/ScrollTrigger'
@@ -8,9 +8,11 @@ import ScrollProgress from './components/shared/ScrollProgress'
 import BotanicalCursor from './components/shared/BotanicalCursor'
 import mandapHeaderImg from './assets/photos/mandap.svg'
 import floralHeaderImg from './assets/photos/floral.svg'
+import { FLAGS } from './featureFlags'
 
 gsap.registerPlugin(ScrollTrigger)
 
+const AdminApp       = lazy(() => import('./admin/AdminApp'))
 const GardenScene    = lazy(() => import('./components/Hero/GardenScene'))
 const OurStory       = lazy(() => import('./components/OurStory/OurStory'))
 const Celebrations   = lazy(() => import('./components/OurStory/Celebrations'))
@@ -107,7 +109,27 @@ function SectionCard({ children, mandapHeader = false }) {
   )
 }
 
+function useHash() {
+  const [hash, setHash] = useState(window.location.hash)
+  useEffect(() => {
+    const handler = () => setHash(window.location.hash)
+    window.addEventListener('hashchange', handler)
+    return () => window.removeEventListener('hashchange', handler)
+  }, [])
+  return hash
+}
+
 export default function App() {
+  const hash = useHash()
+
+  if (hash === '#admin') {
+    return (
+      <Suspense fallback={<div className="min-h-screen flex items-center justify-center text-sm text-gray-400">Loading…</div>}>
+        <AdminApp />
+      </Suspense>
+    )
+  }
+
   return (
     <>
       <ScrollProgress />
@@ -176,14 +198,14 @@ export default function App() {
               </Suspense>
             </SectionCard>
 
-            <SectionCard>
-              <Suspense fallback={<SectionFallback />}>
-                <RSVPForm />
-              </Suspense>
-            </SectionCard>
-
+            {FLAGS.rsvpEnabled && (
+              <SectionCard>
+                <Suspense fallback={<SectionFallback />}>
+                  <RSVPForm />
+                </Suspense>
+              </SectionCard>
+            )}
           </div>
-
           <Footer />
         </main>
       </div>
