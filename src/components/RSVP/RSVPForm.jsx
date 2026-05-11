@@ -169,7 +169,8 @@ export default function RSVPForm() {
   const [allEvents, setAllEvents]         = useState([])
   const [loading, setLoading]             = useState(false)
   const [lookupError, setLookupError]     = useState(null)
-  const [form, setForm]                   = useState({ name: '', guestCount: '1', message: '', events: {} })
+  const [form, setForm]                   = useState({ name: '', guestCount: '1', message: '', events: {}, attending: true })
+  const [declined, setDeclined]           = useState(false)
   const [submitError, setSubmitError]     = useState(null)
 
   useEffect(() => {
@@ -215,9 +216,9 @@ export default function RSVPForm() {
     setLoading(true)
     setSubmitError(null)
 
-    const eventsAttending = Object.entries(form.events)
-      .filter(([, v]) => v)
-      .map(([k]) => k)
+    const eventsAttending = form.attending
+      ? Object.entries(form.events).filter(([, v]) => v).map(([k]) => k)
+      : []
 
     try {
       const { error } = await supabase.from('rsvp_responses').insert({
@@ -225,10 +226,11 @@ export default function RSVPForm() {
         phone:            normalizePhone(phoneInput),
         name:             isUnknown ? form.name.trim() : null,
         events_attending: eventsAttending,
-        guest_count:      Number(form.guestCount),
+        guest_count:      form.attending ? Number(form.guestCount) : 0,
         message:          form.message.trim() || null,
       })
       if (error) throw error
+      setDeclined(!form.attending)
       setPhase('success')
     } catch {
       setSubmitError('Something went wrong. Please try again.')
@@ -253,11 +255,12 @@ export default function RSVPForm() {
         <div className="text-center">
           <RoseIcon />
           <h2 className="font-serif text-3xl text-bark mb-3" style={{ fontWeight: 300 }}>
-            Thank You!
+            {declined ? 'We\'ll Miss You!' : 'Thank You!'}
           </h2>
           <p className="font-serif italic text-bark/65 text-lg leading-relaxed">
-            Your RSVP has been received. We are overjoyed that you will be
-            joining us for our celebration.
+            {declined
+              ? 'We\'re sorry you can\'t make it, but we appreciate you letting us know. You\'ll be in our hearts on the day.'
+              : 'Your RSVP has been received. We are overjoyed that you will be joining us for our celebration.'}
           </p>
           <div className="flex items-center justify-center gap-4 mt-6">
             <div className="h-px w-12 bg-gold/50" />
@@ -351,39 +354,69 @@ export default function RSVPForm() {
             />
           </div>
 
+          {/* Attendance toggle */}
           <div className="mb-8">
-            <label htmlFor="guestCount" className={labelBase}>
-              Number attending <span className="normal-case opacity-60">(including yourself)</span>
-            </label>
-            <select
-              id="guestCount"
-              value={form.guestCount}
-              onChange={e => handleFormChange('guestCount', e.target.value)}
-              className={`${inputBase} cursor-pointer`}
-              aria-required="true"
-            >
-              {Array.from({ length: 10 }, (_, i) => i + 1).map(n => (
-                <option key={n} value={n}>{n} {n === 1 ? 'guest' : 'guests'}</option>
-              ))}
-            </select>
-          </div>
-
-          <div className="mb-8">
-            <p className={labelBase}>Events Planning to Attend</p>
-            <div className="mt-3 grid grid-cols-1 sm:grid-cols-2 gap-3">
-              {visibleEvents.map(event => (
-                <EventToggle
-                  key={event.slug}
-                  id={event.slug}
-                  label={event.label}
-                  date={[formatEventDate(event.event_date), formatEventTime(event.start_time)].filter(Boolean).join(' · ')}
-                  checked={!!form.events[event.slug]}
-                  onToggle={handleEventToggle}
-                />
-              ))}
+            <p className={labelBase}>Will you be joining us?</p>
+            <div className="mt-3 grid grid-cols-2 gap-3">
+              {[
+                { value: true,  label: 'Joyfully Attending' },
+                { value: false, label: 'Unable to Attend' },
+              ].map(({ value, label }) => {
+                const active = form.attending === value
+                return (
+                  <button
+                    key={label}
+                    type="button"
+                    onClick={() => handleFormChange('attending', value)}
+                    className="px-4 py-3 rounded border text-sm font-serif text-bark transition-all duration-200"
+                    style={{
+                      borderColor:     active ? 'rgba(196,126,133,0.9)' : 'rgba(196,126,133,0.4)',
+                      backgroundColor: active ? 'rgba(196,126,133,0.08)' : 'transparent',
+                    }}
+                  >
+                    {label}
+                  </button>
+                )
+              })}
             </div>
           </div>
 
+          {form.attending && (
+            <>
+              <div className="mb-8">
+                <label htmlFor="guestCount" className={labelBase}>
+                  Number attending <span className="normal-case opacity-60">(including yourself)</span>
+                </label>
+                <select
+                  id="guestCount"
+                  value={form.guestCount}
+                  onChange={e => handleFormChange('guestCount', e.target.value)}
+                  className={`${inputBase} cursor-pointer`}
+                  aria-required="true"
+                >
+                  {Array.from({ length: 10 }, (_, i) => i + 1).map(n => (
+                    <option key={n} value={n}>{n} {n === 1 ? 'guest' : 'guests'}</option>
+                  ))}
+                </select>
+              </div>
+
+              <div className="mb-8">
+                <p className={labelBase}>Events Planning to Attend</p>
+                <div className="mt-3 grid grid-cols-1 sm:grid-cols-2 gap-3">
+                  {visibleEvents.map(event => (
+                    <EventToggle
+                      key={event.slug}
+                      id={event.slug}
+                      label={event.label}
+                      date={[formatEventDate(event.event_date), formatEventTime(event.start_time)].filter(Boolean).join(' · ')}
+                      checked={!!form.events[event.slug]}
+                      onToggle={handleEventToggle}
+                    />
+                  ))}
+                </div>
+              </div>
+            </>
+          )}
 
           <div className="mb-10">
             <label htmlFor="message" className={labelBase}>
@@ -412,7 +445,7 @@ export default function RSVPForm() {
               aria-busy={loading}
               className="inline-flex items-center gap-3 bg-dustyRose hover:bg-dustyRose-dark disabled:opacity-50 disabled:cursor-not-allowed text-ivory font-serif tracking-widest text-sm uppercase px-12 py-4 rounded-full transition-all duration-300"
             >
-              {loading ? <><Spinner /><span>Sending…</span></> : 'Confirm Attendance'}
+              {loading ? <><Spinner /><span>Sending…</span></> : form.attending ? 'Confirm Attendance' : 'Send Regrets'}
             </button>
           </div>
         </form>
