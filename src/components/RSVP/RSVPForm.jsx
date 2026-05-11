@@ -172,7 +172,7 @@ export default function RSVPForm() {
   const [allEvents, setAllEvents]         = useState([])
   const [loading, setLoading]             = useState(false)
   const [lookupError, setLookupError]     = useState(null)
-  const [form, setForm]                   = useState({ name: '', guestCount: '1', message: '', events: {}, attending: true })
+  const [form, setForm]                   = useState({ name: '', guestCount: '1', message: '', events: {}, attending: null })
   const [declined, setDeclined]           = useState(false)
   const [submitError, setSubmitError]     = useState(null)
 
@@ -203,6 +203,7 @@ export default function RSVPForm() {
         guestCount: '1',
         message:    '',
         events:     Object.fromEntries(events.map(id => [id, false])),
+        attending:  null,
       })
       setPhase('form')
     } catch {
@@ -444,11 +445,15 @@ export default function RSVPForm() {
           <div className="text-center">
             <button
               type="submit"
-              disabled={loading || (isUnknown && !form.name.trim())}
+              disabled={loading || form.attending === null || (isUnknown && !form.name.trim())}
               aria-busy={loading}
               className="inline-flex items-center gap-3 bg-dustyRose hover:bg-dustyRose-dark disabled:opacity-50 disabled:cursor-not-allowed text-ivory font-serif tracking-widest text-sm uppercase px-12 py-4 rounded-full transition-all duration-300"
             >
-              {loading ? <><Spinner /><span>Sending…</span></> : form.attending ? 'Confirm Attendance' : 'Send Regrets'}
+              {loading
+                ? <><Spinner /><span>Sending…</span></>
+                : form.attending === null ? 'Make a Selection Above'
+                : form.attending ? 'Confirm Attendance'
+                : 'Send Regrets'}
             </button>
           </div>
         </form>
