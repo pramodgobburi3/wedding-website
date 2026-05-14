@@ -199,13 +199,14 @@ export default function RSVPForm() {
     return () => ctx.revert()
   }, [])
 
-  // phases: phone | members | select_events | accommodations | not_found | contact_sent | already_submitted | success
+  // phases: phone | members | select_events | accommodations | not_found | contact_sent | already_submitted | closed | success
   const [phase, setPhase]                   = useState('phone')
   const [phoneInput, setPhoneInput]         = useState('')
   const [guestId, setGuestId]               = useState(null)
   const [hostAllowedEvents, setHostAllowed] = useState([])
   const [allEvents, setAllEvents]           = useState([])
   const [accommodationDates, setAccommodationDates] = useState([])
+  const [deadline, setDeadline]             = useState(null)  // 'YYYY-MM-DD' string or null
   const [loading, setLoading]               = useState(false)
   const [lookupError, setLookupError]       = useState(null)
   const [submitError, setSubmitError]       = useState(null)
@@ -219,14 +220,24 @@ export default function RSVPForm() {
   const [attendingSet, setAttendingSet]   = useState(new Set())
   const [memberEvents, setMemberEvents]   = useState({})
   const [accommodations, setAccommodations] = useState(new Set())
-  const [partyMessage, setPartyMessage]   = useState('')
 
   useEffect(() => {
     supabase.from('events').select('*').order('sort_order')
       .then(({ data }) => setAllEvents(data ?? []))
     supabase.from('accommodation_dates').select('*').order('date')
       .then(({ data }) => setAccommodationDates(data ?? []))
+    supabase.from('app_settings').select('value').eq('key', 'rsvp_deadline').maybeSingle()
+      .then(({ data }) => setDeadline(data?.value ?? null))
   }, [])
+
+  // Local-date comparison (avoid UTC off-by-one): treat the deadline as a
+  // calendar date in the viewer's locale.
+  const deadlinePassed = (() => {
+    if (!deadline) return false
+    const now = new Date()
+    const today = `${now.getFullYear()}-${String(now.getMonth() + 1).padStart(2, '0')}-${String(now.getDate()).padStart(2, '0')}`
+    return today > deadline
+  })()
 
   const dbMemberCount = members.filter(m => !m.additional).length
 
@@ -398,13 +409,17 @@ export default function RSVPForm() {
         p_phone:                   normalizePhone(phoneInput),
         p_events_attending:        allEventsAttending,
         p_guest_count:             guestCount,
-        p_message:                 partyMessage.trim() || null,
+        p_message:                 null,
         p_member_attendance:       memberAttendance,
         p_accommodations_requested: accommodationsList.length ? accommodationsList : null,
       })
       if (error) throw error
       if (data?.ok === false && data?.reason === 'already_submitted') {
         setPhase('already_submitted')
+        return
+      }
+      if (data?.ok === false && data?.reason === 'deadline_passed') {
+        setPhase('closed')
         return
       }
       setDeclined(guestCount === 0)
@@ -539,6 +554,30 @@ export default function RSVPForm() {
     )
   }
 
+  // ── RSVPs closed (deadline passed) ────────────────────────────────────────────
+
+  if (phase === 'closed' || deadlinePassed) {
+    return (
+      <SectionShell sectionRef={sectionRef} bgRef={bgRef} narrow>
+        <div className="text-center">
+          <RoseIcon />
+          <h2 className="font-serif text-3xl text-bark mb-3" style={{ fontWeight: 300 }}>
+            RSVPs Are Closed
+          </h2>
+          <p className="font-serif italic text-bark/65 text-lg leading-relaxed">
+            {deadline
+              ? <>The RSVP deadline of {formatEventDate(deadline)} has passed. If you still need to respond, please reach out to us directly.</>
+              : <>RSVPs are no longer being accepted. If you still need to respond, please reach out to us directly.</>}
+          </p>
+          <Divider />
+          <p className="font-sans font-light text-bark/70 text-md mt-6">
+            With love, Snigdha &amp; Pramod
+          </p>
+        </div>
+      </SectionShell>
+    )
+  }
+
   return (
     <SectionShell sectionRef={sectionRef} bgRef={bgRef}>
       <FormHeader />
@@ -547,10 +586,15 @@ export default function RSVPForm() {
 
       {phase === 'phone' && (
         <form onSubmit={handlePhoneLookup} noValidate>
-          <p className="font-serif italic text-bark/55 text-center text-lg mb-10 -mt-6">
+          <p className="font-serif italic text-bark/55 text-center text-lg mb-3 -mt-6">
             We can't wait to celebrate with you —
             enter your phone number to get started.
           </p>
+          {deadline && (
+            <p className="font-sans text-xs tracking-widest uppercase text-bark/55 text-center mb-10">
+              Kindly RSVP by {formatEventDate(deadline)}
+            </p>
+          )}
           <div className="mb-8">
             <label htmlFor="phone" className={labelBase}>Phone Number</label>
             <input
@@ -793,20 +837,6 @@ export default function RSVPForm() {
             </div>
           )}
 
-          <div className="mb-10">
-            <label htmlFor="party-message" className={labelBase}>
-              A Note for the Couple <span className="normal-case opacity-60">(optional)</span>
-            </label>
-            <textarea
-              id="party-message"
-              placeholder="Share a warm wish or note…"
-              value={partyMessage}
-              onChange={e => setPartyMessage(e.target.value)}
-              rows={3}
-              className={`${inputBase} resize-none`}
-            />
-          </div>
-
           {submitError && (
             <div role="alert" className="mb-6 p-4 bg-dustyRose/10 border border-dustyRose/30 rounded text-center">
               <p className="font-sans text-sm text-dustyRose-dark">{submitError}</p>
@@ -842,17 +872,14 @@ export default function RSVPForm() {
       {phase === 'accommodations' && (
         <form onSubmit={e => { e.preventDefault(); performSubmit() }} noValidate>
           <div className="text-center mb-10 -mt-6">
-            <p className="font-script text-dustyRose text-2xl mb-2">A place to rest</p>
+            <p className="font-script text-dustyRose text-2xl mb-2">Hotel Accommodations</p>
             <p className="font-serif italic text-bark/65 text-lg leading-relaxed">
-              We'd love for you to stay with us.
-            </p>
-            <p className="font-sans text-sm text-bark/60 mt-3">
-              Pick the nights you'd like a room and we'll take care of the rest.
+              We have arranged hotel accommodations for all our guests
             </p>
           </div>
 
           <div className="mb-8">
-            <p className={labelBase}>Nights with us</p>
+            <p className={labelBase}>Please select the nights you'd like to stay:</p>
             <div
               className="mt-3 rounded border px-4 py-3 space-y-1"
               style={{ borderColor: 'rgba(196,126,133,0.3)', backgroundColor: 'rgba(196,126,133,0.03)' }}

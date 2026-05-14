@@ -9,6 +9,7 @@ import EventsView from './views/EventsView'
 import ContactRequestsView from './views/ContactRequestsView'
 import EventBreakdownView from './views/EventBreakdownView'
 import AccommodationsView from './views/AccommodationsView'
+import SettingsView from './views/SettingsView'
 
 const TABS = [
   { key: 'guests',         label: 'Guests' },
@@ -18,6 +19,7 @@ const TABS = [
   { key: 'attendance',     label: 'Attendance' },
   { key: 'accommodations', label: 'Accommodations' },
   { key: 'contact',        label: 'Contact requests' },
+  { key: 'settings',       label: 'Settings' },
 ]
 
 export default function AdminApp() {
@@ -85,6 +87,7 @@ export default function AdminApp() {
         {tab === 'attendance'     && <EventBreakdownView />}
         {tab === 'accommodations' && <AccommodationsView />}
         {tab === 'contact'        && <ContactRequestsView />}
+        {tab === 'settings'       && <SettingsView />}
       </main>
     </div>
   )
