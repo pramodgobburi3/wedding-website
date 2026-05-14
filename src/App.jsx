@@ -6,6 +6,7 @@ import Hero from './components/Hero/Hero'
 import Footer from './components/Footer/Footer'
 import ScrollProgress from './components/shared/ScrollProgress'
 import BotanicalCursor from './components/shared/BotanicalCursor'
+import BackgroundMusic from './components/BackgroundMusic/BackgroundMusic'
 import mandapHeaderImg from './assets/photos/mandap.svg'
 import floralHeaderImg from './assets/photos/floral.svg'
 import { FLAGS } from './featureFlags'
@@ -134,6 +135,7 @@ export default function App() {
     <>
       <ScrollProgress />
       <BotanicalCursor />
+      {/* <BackgroundMusic /> */}
 
       {/* Page root — provides the positioning context so the gradient
           spans the full scrollable height, not just the viewport */}

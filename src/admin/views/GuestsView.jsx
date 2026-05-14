@@ -1,49 +1,50 @@
-import { useState, useEffect, Fragment, useRef } from 'react'
+import { useState, useEffect, Fragment, useRef, useMemo } from 'react'
 import { supabase } from '../../lib/supabase'
 import { BLANK_GUEST } from '../lib/constants'
 import { normalizePhone, groupLabel } from '../lib/utils'
+import { parseCSV } from '../lib/csv'
 import { Btn } from '../components/ui'
 import GuestFormFields from '../components/GuestFormFields'
 
-function parseCSVLine(line) {
-  const fields = []
-  let field = ''
-  let inQuotes = false
-  for (let i = 0; i < line.length; i++) {
-    const ch = line[i]
-    if (ch === '"') {
-      inQuotes = !inQuotes
-    } else if (ch === ',' && !inQuotes) {
-      fields.push(field.trim())
-      field = ''
-    } else {
-      field += ch
-    }
-  }
-  fields.push(field.trim())
-  return fields
-}
-
-function parseCSV(text) {
-  const lines = text.trim().split(/\r?\n/)
-  if (lines.length < 2) return []
-  const headers = parseCSVLine(lines[0]).map(h => h.toLowerCase())
-  return lines.slice(1).filter(l => l.trim()).map(line => {
-    const vals = parseCSVLine(line)
-    return Object.fromEntries(headers.map((h, i) => [h, vals[i] ?? '']))
-  })
-}
-
-function validateRows(rows, groups) {
+function validateRows(rows, groups, existingPhones, partyGroupMap) {
+  const seenInBatch = new Set()
+  // Track party→group seen earlier in the same batch so that later rows in
+  // the CSV get the same group as the first occurrence.
+  const batchPartyGroup = {}
   return rows.map(row => {
     const name = row.name?.trim()
     const normalizedInput = row.group?.toLowerCase().trim().replace(/\s+/g, '_')
-    const group = groups.find(g => g.name.toLowerCase() === normalizedInput)
+    let group = groups.find(g => g.name.toLowerCase() === normalizedInput)
     const phones = (row.phones ?? '').split(',').map(normalizePhone).filter(Boolean)
+    const partyName = row.party_name?.trim() || null
+    let warning = null
     let error = null
     if (!name) error = 'Missing name'
     else if (!group) error = `Unknown group "${row.group}"`
-    return { name, groupName: row.group?.trim(), group, phones, error }
+    else {
+      const dupe = phones.find(p => existingPhones.has(p))
+      const dupeInBatch = phones.find(p => seenInBatch.has(p))
+      if (dupe)         error = `Phone ${dupe} already exists`
+      else if (dupeInBatch) error = `Phone ${dupeInBatch} repeated in CSV`
+    }
+
+    // Apply party→group lock. Existing party in DB wins; otherwise the first
+    // row in the CSV for a party sets the group for that party.
+    if (!error && partyName) {
+      const lockedId = partyGroupMap[partyName] ?? batchPartyGroup[partyName]
+      if (lockedId) {
+        if (group && group.id !== lockedId) {
+          const lockedGroup = groups.find(g => g.id === lockedId)
+          warning = `Group changed to ${lockedGroup?.name ?? '?'} to match party`
+          group = lockedGroup ?? group
+        }
+      } else if (group) {
+        batchPartyGroup[partyName] = group.id
+      }
+    }
+
+    phones.forEach(p => seenInBatch.add(p))
+    return { name, groupName: row.group?.trim(), group, phones, partyName, error, warning }
   })
 }
 
@@ -51,8 +52,10 @@ export default function GuestsView() {
   const [guests, setGuests]           = useState([])
   const [groups, setGroups]           = useState([])
   const [events, setEvents]           = useState([])
+  const [responses, setResponses]     = useState([])
+  const [statusFilter, setStatusFilter] = useState('all') // all | responded | pending
   const [loading, setLoading]         = useState(true)
-  const [expandedId, setExpandedId]   = useState(null)
+  const [expandedIds, setExpandedIds] = useState(() => new Set())
   const [editingId, setEditingId]     = useState(null)
   const [editForm, setEditForm]       = useState(BLANK_GUEST)
   const [showAdd, setShowAdd]         = useState(false)
@@ -63,21 +66,88 @@ export default function GuestsView() {
   const [importPreview, setImportPreview] = useState([])
   const [importing, setImporting]     = useState(false)
   const [importResult, setImportResult]  = useState(null)
+  const [search, setSearch]           = useState('')
   const fileInputRef                  = useRef(null)
 
+  const existingPhones = useMemo(
+    () => new Set(guests.flatMap(g => (g.phones ?? []).map(p => p.phone))),
+    [guests]
+  )
+
+  // Map of party_name → group_id from existing guests. When editing, the guest
+  // being edited is excluded so a sole member of a party can still change groups.
+  const partyGroupMap = useMemo(() => {
+    const map = {}
+    guests.forEach(g => {
+      if (!g.party_name || g.id === editingId) return
+      const gid = g.group?.id ?? g.group_id
+      if (gid && !map[g.party_name]) map[g.party_name] = gid
+    })
+    return map
+  }, [guests, editingId])
+
+  // Guest IDs that appear in any RSVP — either as the response's primary guest,
+  // or referenced inside member_attendance (handling guest_id__N split-name ids).
+  const respondedSet = useMemo(() => {
+    const set = new Set()
+    responses.forEach(r => {
+      if (r.guest_id) set.add(r.guest_id)
+      if (r.member_attendance) {
+        Object.keys(r.member_attendance).forEach(memberId => {
+          if (memberId.startsWith('additional_')) return
+          const idx = memberId.indexOf('__')
+          set.add(idx === -1 ? memberId : memberId.slice(0, idx))
+        })
+      }
+    })
+    return set
+  }, [responses])
+
+  const respondedCount = useMemo(
+    () => guests.filter(g => respondedSet.has(g.id)).length,
+    [guests, respondedSet]
+  )
+
+  const filteredGuests = useMemo(() => {
+    const q = search.toLowerCase().trim()
+    const qDigits = q.replace(/\D/g, '')
+    const filtered = guests.filter(g => {
+      const responded = respondedSet.has(g.id)
+      if (statusFilter === 'responded' && !responded) return false
+      if (statusFilter === 'pending'   &&  responded) return false
+      if (!q) return true
+      if (g.name?.toLowerCase().includes(q)) return true
+      if (g.party_name?.toLowerCase().includes(q)) return true
+      if (g.group?.name?.toLowerCase().includes(q)) return true
+      if (qDigits && g.phones?.some(p => p.phone.includes(qDigits))) return true
+      return false
+    })
+    // Group rows by party_name; party-less guests sort to the end.
+    return filtered.sort((a, b) => {
+      if (!a.party_name && b.party_name) return 1
+      if (a.party_name && !b.party_name) return -1
+      if (a.party_name !== b.party_name) {
+        return (a.party_name ?? '').localeCompare(b.party_name ?? '')
+      }
+      return a.name.localeCompare(b.name)
+    })
+  }, [guests, search, statusFilter, respondedSet])
+
   async function load() {
-    const [{ data: g, error: ge }, { data: grps }, { data: evts }] = await Promise.all([
+    const [{ data: g, error: ge }, { data: grps }, { data: evts }, { data: resp }] = await Promise.all([
       supabase
         .from('guests')
-        .select('*, group:groups(id, name), phones:guest_phones(id, phone)')
+        .select('*, group:groups(id, name, invited_events), phones:guest_phones(id, phone)')
         .order('name'),
       supabase.from('groups').select('id, name').order('name'),
       supabase.from('events').select('slug, label').order('sort_order'),
+      supabase.from('rsvp_responses').select('guest_id, member_attendance'),
     ])
     if (ge) setError(ge.message)
     setGuests(g ?? [])
     setGroups(grps ?? [])
     setEvents(evts ?? [])
+    setResponses(resp ?? [])
     setLoading(false)
   }
 
@@ -91,6 +161,7 @@ export default function GuestsView() {
         name:            addForm.name.trim(),
         group_id:        addForm.group_id,
         events_override: addForm.events_override?.length ? addForm.events_override : null,
+        party_name:      addForm.party_name?.trim() || null,
       })
       .select('id')
       .single()
@@ -115,6 +186,7 @@ export default function GuestsView() {
       name:            editForm.name.trim(),
       group_id:        editForm.group_id,
       events_override: editForm.events_override?.length ? editForm.events_override : null,
+      party_name:      editForm.party_name?.trim() || null,
     }).eq('id', editingId)
     if (error) { setError(error.message); return }
 
@@ -134,7 +206,12 @@ export default function GuestsView() {
   async function handleDelete(id) {
     if (!window.confirm('Delete this guest and all their phone numbers?')) return
     await supabase.from('guests').delete().eq('id', id)
-    if (expandedId === id) setExpandedId(null)
+    setExpandedIds(prev => {
+      if (!prev.has(id)) return prev
+      const next = new Set(prev)
+      next.delete(id)
+      return next
+    })
     load()
   }
 
@@ -158,7 +235,7 @@ export default function GuestsView() {
     const reader = new FileReader()
     reader.onload = ev => {
       const rows = parseCSV(ev.target.result)
-      setImportPreview(validateRows(rows, groups))
+      setImportPreview(validateRows(rows, groups, existingPhones, partyGroupMap))
       setImportResult(null)
     }
     reader.readAsText(file)
@@ -169,25 +246,16 @@ export default function GuestsView() {
     setImporting(true)
 
     try {
-      // Bulk insert all guests in one request, get back IDs in insertion order
-      const { data: insertedGuests, error: gErr } = await supabase
-        .from('guests')
-        .insert(valid.map(row => ({ name: row.name, group_id: row.group.id })))
-        .select('id')
-      if (gErr) throw gErr
+      const payload = valid.map(row => ({
+        name:       row.name,
+        group_id:   row.group.id,
+        party_name: row.partyName,
+        phones:     row.phones,
+      }))
+      const { data, error: rpcErr } = await supabase.rpc('bulk_import_guests', { p_payload: payload })
+      if (rpcErr) throw rpcErr
 
-      // Build phone rows using the returned IDs (order matches insertion order)
-      const phoneRows = insertedGuests.flatMap((guest, i) =>
-        valid[i].phones.map(phone => ({ guest_id: guest.id, phone }))
-      )
-
-      // Bulk insert all phones in one request
-      if (phoneRows.length) {
-        const { error: pErr } = await supabase.from('guest_phones').insert(phoneRows)
-        if (pErr) throw pErr
-      }
-
-      setImportResult({ ok: insertedGuests.length, errors: [] })
+      setImportResult({ ok: data?.inserted ?? valid.length, errors: [] })
       setImportPreview([])
       if (fileInputRef.current) fileInputRef.current.value = ''
       load()
@@ -200,12 +268,13 @@ export default function GuestsView() {
 
   function startEdit(guest) {
     setEditingId(guest.id)
-    setExpandedId(guest.id)
+    setExpandedIds(prev => new Set(prev).add(guest.id))
     setEditForm({
       name:            guest.name,
       group_id:        guest.group.id,
       events_override: guest.events_override ?? [],
       phones:          guest.phones.map(p => p.phone).join(', '),
+      party_name:      guest.party_name ?? '',
     })
   }
 
@@ -213,14 +282,51 @@ export default function GuestsView() {
 
   return (
     <div>
-      <div className="flex items-center justify-between mb-4">
-        <p className="text-sm text-gray-500">{guests.length} guests</p>
-        <div className="flex gap-2">
+      <div className="flex items-center justify-between mb-3 gap-3">
+        <div className="text-sm text-gray-500 flex-shrink-0">
+          {search.trim() || statusFilter !== 'all'
+            ? `${filteredGuests.length} of ${guests.length} matching`
+            : `${guests.reduce((sum, g) => sum + ((g.name ?? '').split(',').map(n => n.trim()).filter(Boolean).length || 1), 0)} guests`}
+        </div>
+        <div className="flex gap-2 flex-shrink-0">
           <Btn variant="secondary" onClick={() => { setShowImport(v => !v); setImportPreview([]); setImportResult(null) }}>
             Import CSV
           </Btn>
           <Btn variant="primary" onClick={() => setShowAdd(v => !v)}>+ Add guest</Btn>
         </div>
+      </div>
+
+      <div className="flex items-center justify-between gap-3 mb-4">
+        <div className="flex flex-wrap gap-2">
+          {[
+            { key: 'all',       label: 'All',       count: guests.length },
+            { key: 'responded', label: 'Responded', count: respondedCount },
+            { key: 'pending',   label: 'Pending',   count: guests.length - respondedCount },
+          ].map(f => {
+            const active = statusFilter === f.key
+            return (
+              <button
+                key={f.key}
+                onClick={() => setStatusFilter(f.key)}
+                className={`px-3 py-1.5 rounded text-xs border transition-colors ${
+                  active
+                    ? 'border-rose-400 bg-rose-50 text-rose-600'
+                    : 'border-gray-200 bg-white text-gray-600 hover:bg-gray-50'
+                }`}
+              >
+                <span className="font-medium">{f.label}</span>
+                <span className={`ml-2 ${active ? 'text-rose-400' : 'text-gray-400'}`}>{f.count}</span>
+              </button>
+            )
+          })}
+        </div>
+        <input
+          type="search"
+          placeholder="Search by name, phone, group, or party…"
+          value={search}
+          onChange={e => setSearch(e.target.value)}
+          className="w-72 text-sm border border-gray-300 rounded px-3 py-1.5 focus:outline-none focus:ring-1 focus:ring-rose-300 flex-shrink-0"
+        />
       </div>
 
       {error && <p className="text-xs text-red-500 mb-3">{error}</p>}
@@ -231,8 +337,8 @@ export default function GuestsView() {
             <div>
               <p className="text-sm font-medium text-gray-800">Import guests from CSV</p>
               <p className="text-xs text-gray-400 mt-0.5">
-                Required columns: <span className="font-mono">name, group, phones</span> — phones can be comma-separated inside quotes.
-                Group names match case-insensitively (e.g. "Family Friends" → family_friends).
+                Required columns: <span className="font-mono">name, group, phones</span> — optional: <span className="font-mono">party_name</span>.
+                Phones can be comma-separated inside quotes. Group names match case-insensitively.
               </p>
             </div>
           </div>
@@ -252,6 +358,7 @@ export default function GuestsView() {
                   <tr className="text-left text-gray-500 border-b border-gray-100">
                     <th className="py-1.5 pr-4 font-medium">Name</th>
                     <th className="py-1.5 pr-4 font-medium">Group</th>
+                    <th className="py-1.5 pr-4 font-medium">Party</th>
                     <th className="py-1.5 pr-4 font-medium">Phones</th>
                     <th className="py-1.5 font-medium">Status</th>
                   </tr>
@@ -260,12 +367,19 @@ export default function GuestsView() {
                   {importPreview.map((row, i) => (
                     <tr key={i} className={row.error ? 'text-gray-400' : 'text-gray-700'}>
                       <td className="py-1.5 pr-4">{row.name || <span className="italic">—</span>}</td>
-                      <td className="py-1.5 pr-4">{row.groupName}</td>
+                      <td className="py-1.5 pr-4">
+                        {row.group?.name && row.group.name.toLowerCase() !== row.groupName?.toLowerCase().replace(/\s+/g, '_')
+                          ? <span><s className="text-gray-400">{row.groupName}</s> {row.group.name}</span>
+                          : row.groupName}
+                      </td>
+                      <td className="py-1.5 pr-4">{row.partyName || <span className="italic text-gray-300">—</span>}</td>
                       <td className="py-1.5 pr-4">{row.phones.length ? row.phones.join(', ') : <span className="italic text-gray-300">none</span>}</td>
                       <td className="py-1.5">
                         {row.error
                           ? <span className="text-red-500">{row.error}</span>
-                          : <span className="text-green-600">✓</span>}
+                          : row.warning
+                            ? <span className="text-amber-600" title={row.warning}>✓ {row.warning}</span>
+                            : <span className="text-green-600">✓</span>}
                       </td>
                     </tr>
                   ))}
@@ -297,7 +411,7 @@ export default function GuestsView() {
       {showAdd && (
         <form onSubmit={handleAdd} className="bg-white border border-gray-200 rounded-lg p-4 mb-4 space-y-3">
           <p className="text-sm font-medium text-gray-800">New guest</p>
-          <GuestFormFields form={addForm} onChange={setAddForm} groups={groups} events={events} showPhones />
+          <GuestFormFields form={addForm} onChange={setAddForm} groups={groups} events={events} showPhones partyGroupMap={partyGroupMap} />
           <div className="flex gap-2">
             <Btn type="submit" variant="primary">Add guest</Btn>
             <Btn variant="secondary" onClick={() => setShowAdd(false)}>Cancel</Btn>
@@ -311,19 +425,31 @@ export default function GuestsView() {
             <tr className="border-b border-gray-100 bg-gray-50 text-left">
               <th className="px-4 py-3 text-xs font-medium text-gray-500 uppercase tracking-wide">Name</th>
               <th className="px-4 py-3 text-xs font-medium text-gray-500 uppercase tracking-wide">Group</th>
+              <th className="px-4 py-3 text-xs font-medium text-gray-500 uppercase tracking-wide">Party</th>
               <th className="px-4 py-3 text-xs font-medium text-gray-500 uppercase tracking-wide">Events</th>
-              <th className="px-4 py-3 text-xs font-medium text-gray-500 uppercase tracking-wide">Phones</th>
+              <th className="px-4 py-3 text-xs font-medium text-gray-500 uppercase tracking-wide">Status</th>
               <th className="px-4 py-3" />
             </tr>
           </thead>
           <tbody className="divide-y divide-gray-100">
-            {guests.map(guest => (
+            {filteredGuests.length === 0 && (
+              <tr>
+                <td colSpan={6} className="px-4 py-8 text-center text-sm text-gray-400">
+                  {search.trim() ? 'No guests match your search.' : 'No guests yet.'}
+                </td>
+              </tr>
+            )}
+            {filteredGuests.map((guest, i) => {
+              const prev = filteredGuests[i - 1]
+              const partyChanged = i > 0 && (prev?.party_name ?? null) !== (guest.party_name ?? null)
+              const groupBreakClass = partyChanged ? 'border-t-2 border-t-gray-200' : ''
+              return (
               <Fragment key={guest.id}>
                 {editingId === guest.id ? (
-                  <tr>
-                    <td colSpan={5} className="px-4 py-4">
+                  <tr className={groupBreakClass}>
+                    <td colSpan={6} className="px-4 py-4">
                       <form onSubmit={handleUpdate} className="space-y-3">
-                        <GuestFormFields form={editForm} onChange={setEditForm} groups={groups} events={events} showPhones />
+                        <GuestFormFields form={editForm} onChange={setEditForm} groups={groups} events={events} showPhones partyGroupMap={partyGroupMap} />
                         <div className="flex gap-2">
                           <Btn type="submit" variant="primary">Save</Btn>
                           <Btn variant="secondary" onClick={() => setEditingId(null)}>Cancel</Btn>
@@ -333,17 +459,32 @@ export default function GuestsView() {
                   </tr>
                 ) : (
                   <tr
-                    className="hover:bg-gray-50 cursor-pointer"
-                    onClick={() => setExpandedId(v => v === guest.id ? null : guest.id)}
+                    className={`hover:bg-gray-50 cursor-pointer ${groupBreakClass}`}
+                    onClick={() => setExpandedIds(prev => {
+                      const next = new Set(prev)
+                      next.has(guest.id) ? next.delete(guest.id) : next.add(guest.id)
+                      return next
+                    })}
                   >
                     <td className="px-4 py-3 font-medium text-gray-900">{guest.name}</td>
                     <td className="px-4 py-3 text-gray-500 capitalize">{groupLabel(guest.group.name)}</td>
-                    <td className="px-4 py-3 text-gray-400 text-xs">
-                      {guest.events_override?.length
-                        ? <span className="text-gray-700">{guest.events_override.join(', ')}</span>
-                        : <span className="italic">from group</span>}
+                    <td className="px-4 py-3 text-gray-500 text-xs">{guest.party_name || <span className="text-gray-300 italic">—</span>}</td>
+                    <td className="px-4 py-3 text-xs">
+                      {(() => {
+                        const overridden = guest.events_override?.length > 0
+                        const slugs = overridden ? guest.events_override : (guest.group.invited_events ?? [])
+                        return (
+                          <span className={overridden ? 'text-gray-700' : 'text-gray-400'}>
+                            {slugs.join(', ')}
+                          </span>
+                        )
+                      })()}
                     </td>
-                    <td className="px-4 py-3 text-gray-500">{guest.phones.length}</td>
+                    <td className="px-4 py-3 text-xs">
+                      {respondedSet.has(guest.id)
+                        ? <span className="inline-block px-2 py-0.5 rounded bg-green-50 text-green-700 font-medium">Responded</span>
+                        : <span className="inline-block px-2 py-0.5 rounded bg-amber-50 text-amber-700 font-medium">Pending</span>}
+                    </td>
                     <td className="px-4 py-3 text-right whitespace-nowrap">
                       <Btn variant="ghost" onClick={e => { e.stopPropagation(); startEdit(guest) }}>Edit</Btn>
                       <Btn variant="danger" onClick={e => { e.stopPropagation(); handleDelete(guest.id) }} className="ml-2">Delete</Btn>
@@ -351,9 +492,9 @@ export default function GuestsView() {
                   </tr>
                 )}
 
-                {expandedId === guest.id && editingId !== guest.id && (
+                {expandedIds.has(guest.id) && editingId !== guest.id && (
                   <tr>
-                    <td colSpan={5} className="px-6 py-3 bg-gray-50 border-t border-gray-100">
+                    <td colSpan={6} className="px-6 py-3 bg-gray-50 border-t border-gray-100">
                       <div className="flex flex-wrap gap-2 mb-2">
                         {guest.phones.length === 0 && (
                           <span className="text-xs text-gray-400">No phone numbers yet</span>
@@ -386,7 +527,8 @@ export default function GuestsView() {
                   </tr>
                 )}
               </Fragment>
-            ))}
+              )
+            })}
           </tbody>
         </table>
       </div>

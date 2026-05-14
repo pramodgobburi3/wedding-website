@@ -6,8 +6,19 @@ import GroupsView from './views/GroupsView'
 import GuestsView from './views/GuestsView'
 import ResponsesView from './views/ResponsesView'
 import EventsView from './views/EventsView'
+import ContactRequestsView from './views/ContactRequestsView'
+import EventBreakdownView from './views/EventBreakdownView'
+import AccommodationsView from './views/AccommodationsView'
 
-const TABS = ['guests', 'groups', 'events', 'responses']
+const TABS = [
+  { key: 'guests',         label: 'Guests' },
+  { key: 'groups',         label: 'Groups' },
+  { key: 'events',         label: 'Events' },
+  { key: 'responses',      label: 'Responses' },
+  { key: 'attendance',     label: 'Attendance' },
+  { key: 'accommodations', label: 'Accommodations' },
+  { key: 'contact',        label: 'Contact requests' },
+]
 
 export default function AdminApp() {
   const [session, setSession]         = useState(null)
@@ -53,15 +64,15 @@ export default function AdminApp() {
       <nav className="border-b border-gray-200 bg-white px-6 flex">
         {TABS.map(t => (
           <button
-            key={t}
-            onClick={() => setTab(t)}
-            className={`py-3 px-4 text-sm border-b-2 -mb-px transition-colors capitalize ${
-              tab === t
+            key={t.key}
+            onClick={() => setTab(t.key)}
+            className={`py-3 px-4 text-sm border-b-2 -mb-px transition-colors ${
+              tab === t.key
                 ? 'border-rose-400 text-rose-500 font-medium'
                 : 'border-transparent text-gray-500 hover:text-gray-700'
             }`}
           >
-            {t}
+            {t.label}
           </button>
         ))}
       </nav>
@@ -70,7 +81,10 @@ export default function AdminApp() {
         {tab === 'guests'    && <GuestsView />}
         {tab === 'groups'    && <GroupsView />}
         {tab === 'events'    && <EventsView />}
-        {tab === 'responses' && <ResponsesView />}
+        {tab === 'responses'      && <ResponsesView />}
+        {tab === 'attendance'     && <EventBreakdownView />}
+        {tab === 'accommodations' && <AccommodationsView />}
+        {tab === 'contact'        && <ContactRequestsView />}
       </main>
     </div>
   )
