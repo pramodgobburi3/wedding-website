@@ -15,18 +15,20 @@
     -moz-osx-font-smoothing: grayscale;
   }
 
-  /* Hide OS cursor on desktop for custom botanical cursor */
+  /* Hide OS cursor on desktop for custom botanical cursor.
+     Pages that should keep the native cursor (admin, terms, privacy) mount a
+     root element with one of these IDs so the rules below short-circuit. */
   @media (hover: hover) and (pointer: fine) {
-    body:not(:has(#admin-root)) {
+    body:not(:has(#admin-root)):not(:has(#legal-root)) {
       cursor: none;
     }
-    body:not(:has(#admin-root)) a,
-    body:not(:has(#admin-root)) button,
-    body:not(:has(#admin-root)) [role="button"],
-    body:not(:has(#admin-root)) select,
-    body:not(:has(#admin-root)) input,
-    body:not(:has(#admin-root)) textarea,
-    body:not(:has(#admin-root)) label {
+    body:not(:has(#admin-root)):not(:has(#legal-root)) a,
+    body:not(:has(#admin-root)):not(:has(#legal-root)) button,
+    body:not(:has(#admin-root)):not(:has(#legal-root)) [role="button"],
+    body:not(:has(#admin-root)):not(:has(#legal-root)) select,
+    body:not(:has(#admin-root)):not(:has(#legal-root)) input,
+    body:not(:has(#admin-root)):not(:has(#legal-root)) textarea,
+    body:not(:has(#admin-root)):not(:has(#legal-root)) label {
       cursor: none;
     }
   }

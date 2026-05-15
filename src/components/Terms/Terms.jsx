@@ -1,6 +1,7 @@
 export default function Terms() {
   return (
     <main
+      id="legal-root"
       className="min-h-screen py-20 px-6"
       style={{ backgroundColor: '#EDE4D8' }}
     >
