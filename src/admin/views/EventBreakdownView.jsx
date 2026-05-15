@@ -39,8 +39,10 @@ export default function EventBreakdownView() {
       if (!r.member_attendance) return
       Object.entries(r.member_attendance).forEach(([memberId, member]) => {
         if (!Array.isArray(member.events)) return
-        const guestId = extractGuestId(memberId)
-        const partyName = guestId ? partyByGuestId[guestId] ?? null : null
+        // For real guests, the party comes from their own guest row.
+        // For "+added" guests, fall back to the host who added them.
+        const lookupId = extractGuestId(memberId) ?? member.added_by_guest_id ?? null
+        const partyName = lookupId ? partyByGuestId[lookupId] ?? null : null
         member.events.forEach(slug => {
           if (!map[slug]) map[slug] = []
           map[slug].push({

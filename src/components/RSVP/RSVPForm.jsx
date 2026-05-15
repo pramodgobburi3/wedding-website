@@ -144,6 +144,15 @@ function FormHeader() {
   )
 }
 
+function SmsConsent() {
+  return (
+    <p className="mt-6 font-sans text-[11px] leading-relaxed text-bark/45 text-center max-w-sm mx-auto">
+      By RSVPing, you agree to receive event-related SMS messages from us at the
+      number you provided.
+    </p>
+  )
+}
+
 function AttendingToggle({ attending, onChange }) {
   return (
     <div className="flex gap-2">
@@ -623,6 +632,7 @@ export default function RSVPForm() {
               {loading ? <><Spinner /><span>Looking up…</span></> : 'Continue'}
             </button>
           </div>
+          <SmsConsent />
         </form>
       )}
 
@@ -685,6 +695,7 @@ export default function RSVPForm() {
                 {loading ? <><Spinner /><span>Sending…</span></> : 'Notify the Hosts'}
               </button>
             </div>
+            <SmsConsent />
           </form>
         </div>
       )}
@@ -775,7 +786,7 @@ export default function RSVPForm() {
               {loading
                 ? <><Spinner /><span>Sending…</span></>
                 : namesIncomplete ? 'Enter All Names'
-                : attendingSet.size === 0 ? 'Send Regrets'
+                : attendingSet.size === 0 ? 'egrets'
                 : 'Continue'}
             </button>
           </div>
@@ -859,7 +870,7 @@ export default function RSVPForm() {
             >
               {loading
                 ? <><Spinner /><span>Sending…</span></>
-                : !anyoneAttendingAnything ? 'Send Regrets'
+                : !anyoneAttendingAnything ? 'Send Blessings'
                 : accommodationOptions.length > 0 ? 'Continue'
                 : 'Confirm Attendance'}
             </button>

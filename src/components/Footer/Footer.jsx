@@ -59,6 +59,22 @@ export default function Footer() {
       <p className="font-sans text-ivory/20 text-[10px] tracking-widest uppercase">
         © {year} Snigdha &amp; Pramod · Made with love
       </p>
+
+      <p className="mt-3 flex flex-wrap items-center justify-center gap-x-4 gap-y-1">
+        <a
+          href="#terms"
+          className="font-sans text-ivory/20 hover:text-ivory/50 text-[10px] tracking-widest uppercase transition-colors duration-200"
+        >
+          Terms &amp; Conditions
+        </a>
+        <span className="text-ivory/15 text-[10px]" aria-hidden="true">·</span>
+        <a
+          href="#privacy"
+          className="font-sans text-ivory/20 hover:text-ivory/50 text-[10px] tracking-widest uppercase transition-colors duration-200"
+        >
+          Privacy Policy
+        </a>
+      </p>
     </footer>
   )
 }

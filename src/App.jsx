@@ -14,6 +14,8 @@ import { FLAGS } from './featureFlags'
 gsap.registerPlugin(ScrollTrigger)
 
 const AdminApp       = lazy(() => import('./admin/AdminApp'))
+const Terms          = lazy(() => import('./components/Terms/Terms'))
+const Privacy        = lazy(() => import('./components/Privacy/Privacy'))
 const GardenScene    = lazy(() => import('./components/Hero/GardenScene'))
 const OurStory       = lazy(() => import('./components/OurStory/OurStory'))
 const Celebrations   = lazy(() => import('./components/OurStory/Celebrations'))
@@ -127,6 +129,22 @@ export default function App() {
     return (
       <Suspense fallback={<div className="min-h-screen flex items-center justify-center text-sm text-gray-400">Loading…</div>}>
         <AdminApp />
+      </Suspense>
+    )
+  }
+
+  if (hash === '#terms') {
+    return (
+      <Suspense fallback={<div className="min-h-screen flex items-center justify-center text-sm text-gray-400">Loading…</div>}>
+        <Terms />
+      </Suspense>
+    )
+  }
+
+  if (hash === '#privacy') {
+    return (
+      <Suspense fallback={<div className="min-h-screen flex items-center justify-center text-sm text-gray-400">Loading…</div>}>
+        <Privacy />
       </Suspense>
     )
   }
