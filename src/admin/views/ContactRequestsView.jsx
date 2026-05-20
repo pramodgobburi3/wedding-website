@@ -1,7 +1,7 @@
 import { useState, useEffect, useMemo } from 'react'
 import { supabase } from '../../lib/supabase'
 import { BLANK_GUEST } from '../lib/constants'
-import { normalizePhone, groupLabel } from '../lib/utils'
+import { normalizePhone, isInternationalPhone, groupLabel } from '../lib/utils'
 import { Btn } from '../components/ui'
 import GuestFormFields from '../components/GuestFormFields'
 
@@ -76,11 +76,14 @@ export default function ContactRequestsView() {
         .single()
       if (gErr) throw gErr
 
-      const phones = (convertForm.phones ?? '').split(',').map(normalizePhone).filter(Boolean)
+      const phones = (convertForm.phones ?? '')
+        .split(',')
+        .map(raw => ({ phone: normalizePhone(raw), is_international: isInternationalPhone(raw) }))
+        .filter(p => p.phone)
       if (phones.length) {
         const { error: pErr } = await supabase
           .from('guest_phones')
-          .insert(phones.map(phone => ({ guest_id: guest.id, phone })))
+          .insert(phones.map(p => ({ guest_id: guest.id, phone: p.phone, is_international: p.is_international })))
         if (pErr) throw pErr
       }
 

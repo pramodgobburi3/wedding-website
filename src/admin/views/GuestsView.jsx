@@ -1,7 +1,7 @@
 import { useState, useEffect, Fragment, useRef, useMemo } from 'react'
 import { supabase } from '../../lib/supabase'
 import { BLANK_GUEST } from '../lib/constants'
-import { normalizePhone, groupLabel } from '../lib/utils'
+import { normalizePhone, isInternationalPhone, groupLabel } from '../lib/utils'
 import { parseCSV } from '../lib/csv'
 import { Btn } from '../components/ui'
 import GuestFormFields from '../components/GuestFormFields'
@@ -15,17 +15,22 @@ function validateRows(rows, groups, existingPhones, partyGroupMap) {
     const name = row.name?.trim()
     const normalizedInput = row.group?.toLowerCase().trim().replace(/\s+/g, '_')
     let group = groups.find(g => g.name.toLowerCase() === normalizedInput)
-    const phones = (row.phones ?? '').split(',').map(normalizePhone).filter(Boolean)
+    // Build phones as objects so we can carry the is_international flag through
+    // validation → preview → bulk_import. Filter out any that normalize to "".
+    const phones = (row.phones ?? '')
+      .split(',')
+      .map(raw => ({ phone: normalizePhone(raw), is_international: isInternationalPhone(raw) }))
+      .filter(p => p.phone)
     const partyName = row.party_name?.trim() || null
     let warning = null
     let error = null
     if (!name) error = 'Missing name'
     else if (!group) error = `Unknown group "${row.group}"`
     else {
-      const dupe = phones.find(p => existingPhones.has(p))
-      const dupeInBatch = phones.find(p => seenInBatch.has(p))
-      if (dupe)         error = `Phone ${dupe} already exists`
-      else if (dupeInBatch) error = `Phone ${dupeInBatch} repeated in CSV`
+      const dupe = phones.find(p => existingPhones.has(p.phone))
+      const dupeInBatch = phones.find(p => seenInBatch.has(p.phone))
+      if (dupe)         error = `Phone ${dupe.phone} already exists`
+      else if (dupeInBatch) error = `Phone ${dupeInBatch.phone} repeated in CSV`
     }
 
     // Apply party→group lock. Existing party in DB wins; otherwise the first
@@ -43,7 +48,7 @@ function validateRows(rows, groups, existingPhones, partyGroupMap) {
       }
     }
 
-    phones.forEach(p => seenInBatch.add(p))
+    phones.forEach(p => seenInBatch.add(p.phone))
     return { name, groupName: row.group?.trim(), group, phones, partyName, error, warning }
   })
 }
@@ -137,7 +142,7 @@ export default function GuestsView() {
     const [{ data: g, error: ge }, { data: grps }, { data: evts }, { data: resp }] = await Promise.all([
       supabase
         .from('guests')
-        .select('*, group:groups(id, name, invited_events), phones:guest_phones(id, phone)')
+        .select('*, group:groups(id, name, invited_events), phones:guest_phones(id, phone, is_international)')
         .order('name'),
       supabase.from('groups').select('id, name').order('name'),
       supabase.from('events').select('slug, label').order('sort_order'),
@@ -167,11 +172,14 @@ export default function GuestsView() {
       .single()
     if (error) { setError(error.message); return }
 
-    const phones = (addForm.phones ?? '').split(',').map(normalizePhone).filter(Boolean)
+    const phones = (addForm.phones ?? '')
+      .split(',')
+      .map(raw => ({ phone: normalizePhone(raw), is_international: isInternationalPhone(raw) }))
+      .filter(p => p.phone)
     if (phones.length) {
       const { error: phoneErr } = await supabase
         .from('guest_phones')
-        .insert(phones.map(phone => ({ guest_id: guest.id, phone })))
+        .insert(phones.map(p => ({ guest_id: guest.id, phone: p.phone, is_international: p.is_international })))
       if (phoneErr) { setError(phoneErr.message); return }
     }
 
@@ -190,12 +198,15 @@ export default function GuestsView() {
     }).eq('id', editingId)
     if (error) { setError(error.message); return }
 
-    const phones = (editForm.phones ?? '').split(',').map(normalizePhone).filter(Boolean)
+    const phones = (editForm.phones ?? '')
+      .split(',')
+      .map(raw => ({ phone: normalizePhone(raw), is_international: isInternationalPhone(raw) }))
+      .filter(p => p.phone)
     await supabase.from('guest_phones').delete().eq('guest_id', editingId)
     if (phones.length) {
       const { error: phoneErr } = await supabase
         .from('guest_phones')
-        .insert(phones.map(phone => ({ guest_id: editingId, phone })))
+        .insert(phones.map(p => ({ guest_id: editingId, phone: p.phone, is_international: p.is_international })))
       if (phoneErr) { setError(phoneErr.message); return }
     }
 
@@ -216,9 +227,14 @@ export default function GuestsView() {
   }
 
   async function handleAddPhone(guestId) {
-    const phone = normalizePhone(phoneInputs[guestId] ?? '')
+    const raw = phoneInputs[guestId] ?? ''
+    const phone = normalizePhone(raw)
     if (!phone) return
-    const { error } = await supabase.from('guest_phones').insert({ guest_id: guestId, phone })
+    const { error } = await supabase.from('guest_phones').insert({
+      guest_id:         guestId,
+      phone,
+      is_international: isInternationalPhone(raw),
+    })
     if (error) { setError(error.message); return }
     setPhoneInputs(prev => ({ ...prev, [guestId]: '' }))
     load()
@@ -373,7 +389,9 @@ export default function GuestsView() {
                           : row.groupName}
                       </td>
                       <td className="py-1.5 pr-4">{row.partyName || <span className="italic text-gray-300">—</span>}</td>
-                      <td className="py-1.5 pr-4">{row.phones.length ? row.phones.join(', ') : <span className="italic text-gray-300">none</span>}</td>
+                      <td className="py-1.5 pr-4">{row.phones.length
+                        ? row.phones.map(p => p.phone + (p.is_international ? ' (intl)' : '')).join(', ')
+                        : <span className="italic text-gray-300">none</span>}</td>
                       <td className="py-1.5">
                         {row.error
                           ? <span className="text-red-500">{row.error}</span>
@@ -502,6 +520,14 @@ export default function GuestsView() {
                         {guest.phones.map(p => (
                           <span key={p.id} className="inline-flex items-center gap-1 text-xs bg-white border border-gray-200 rounded px-2 py-1 font-mono">
                             {p.phone}
+                            {p.is_international && (
+                              <span
+                                className="ml-1 text-[9px] font-sans font-medium tracking-wide uppercase text-amber-700 bg-amber-50 border border-amber-200 rounded px-1 py-px"
+                                title="International number"
+                              >
+                                INTL
+                              </span>
+                            )}
                             <button
                               onClick={() => handleDeletePhone(p.id)}
                               className="text-gray-400 hover:text-red-500 ml-1 leading-none"

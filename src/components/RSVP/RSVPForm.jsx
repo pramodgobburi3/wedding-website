@@ -15,8 +15,11 @@ function formatEventTime(timeStr) {
 }
 
 function normalizePhone(raw) {
-  const digits = raw.replace(/\D/g, '')
-  if (raw.trim().startsWith('+') && digits.length > 10) return digits.slice(-10)
+  const trimmed = (raw ?? '').trim()
+  const digits  = trimmed.replace(/\D/g, '')
+  if (trimmed.startsWith('+') && digits.length > 10) return digits.slice(-10)
+  if (digits.length > 10 && digits.startsWith('91'))  return digits.slice(2)
+  if (digits.length > 10 && digits.startsWith('44')) return digits.slice(2)
   if (digits.length === 11 && digits.startsWith('1')) return digits.slice(1)
   return digits
 }
@@ -229,6 +232,9 @@ export default function RSVPForm() {
   const [attendingSet, setAttendingSet]   = useState(new Set())
   const [memberEvents, setMemberEvents]   = useState({})
   const [accommodations, setAccommodations] = useState(new Set())
+  // Edit-mode tracking: true when the lookup found an existing RSVP and the
+  // form is pre-filled with it. Drives copy on the form + success screens.
+  const [isEditing, setIsEditing]         = useState(false)
 
   useEffect(() => {
     supabase.from('events').select('*').order('sort_order')
@@ -266,7 +272,11 @@ export default function RSVPForm() {
       const { data, error } = await supabase.rpc('lookup_guest_by_phone', { p_phone: phone })
       if (error) throw error
 
-      if (data.already_submitted) { setPhase('already_submitted'); return }
+      // Unknown phone with a prior contact_request — keep current behavior.
+      if (data.already_submitted && !data.found) {
+        setPhase('already_submitted')
+        return
+      }
 
       if (!data.found) {
         setPhase('not_found')
@@ -274,8 +284,6 @@ export default function RSVPForm() {
       }
 
       const hostEvents = data.allowed_events ?? []
-      // Use party_members if the updated RPC is deployed; otherwise fall back
-      // to building a single-member list from the basic lookup fields.
       const rawMembers = Array.isArray(data.party_members) && data.party_members.length > 0
         ? data.party_members
         : [{ guest_id: data.guest_id, name: data.name, allowed_events: hostEvents }]
@@ -295,18 +303,69 @@ export default function RSVPForm() {
       })
 
       setTravelEligible(!!data.travel_accommodations)
-      setAccommodations(new Set())
       setGuestId(data.guest_id)
       setHostAllowed(hostEvents)
-      setMembers(dbMembers)
-      setAttendingSet(new Set(dbMembers.map(m => m.id)))
 
-      const initEvents = {}
-      dbMembers.forEach(m => {
-        initEvents[m.id] = Object.fromEntries((m.allowed_events ?? []).map(s => [s, true]))
+      const existing  = data.already_submitted ? data.existing_response : null
+      const existingMA = existing?.member_attendance ?? {}
+
+      // Re-hydrate any "+added" guests from the previous submission so the user
+      // sees them in the form again. Their IDs (additional_N) were generated
+      // client-side last time; we keep them so the next save touches the same
+      // entries.
+      const additionalMembers = Object.entries(existingMA)
+        .filter(([id]) => id.startsWith('additional_'))
+        .map(([id, m]) => ({
+          id,
+          name:           m?.name ?? '',
+          allowed_events: hostEvents,
+          additional:     true,
+        }))
+
+      // Bump the additional-id counter past any existing additional_N so new
+      // ones added during the edit don't collide.
+      const maxAdditional = additionalMembers
+        .map(m => Number(m.id.slice('additional_'.length)) || 0)
+        .reduce((a, b) => Math.max(a, b), 0)
+      additionalIdRef.current = maxAdditional
+
+      // Use the previously-edited name (if any) for db members too.
+      const hydratedDbMembers = dbMembers.map(m => ({
+        ...m,
+        name: existingMA[m.id]?.name ?? m.name,
+      }))
+
+      const allMembers = [...hydratedDbMembers, ...additionalMembers]
+      setMembers(allMembers)
+
+      // Attending = anyone with at least one event selected previously.
+      // For first-time submitters (no existing response), default everyone in.
+      const initAttending = new Set()
+      const initEvents    = {}
+      allMembers.forEach(m => {
+        const prevEvents = Array.isArray(existingMA[m.id]?.events) ? existingMA[m.id].events : null
+        if (existing) {
+          if (prevEvents && prevEvents.length > 0) initAttending.add(m.id)
+        } else {
+          initAttending.add(m.id)
+        }
+        initEvents[m.id] = Object.fromEntries(
+          (m.allowed_events ?? []).map(s => [
+            s,
+            existing ? !!(prevEvents && prevEvents.includes(s)) : true,
+          ])
+        )
       })
+      setAttendingSet(initAttending)
       setMemberEvents(initEvents)
 
+      // Restore prior accommodation selections.
+      const prevAccoms = Array.isArray(existing?.accommodations_requested)
+        ? existing.accommodations_requested
+        : []
+      setAccommodations(new Set(prevAccoms))
+
+      setIsEditing(!!existing)
       setPhase('members')
     } catch {
       setLookupError('Something went wrong. Please try again.')
@@ -423,10 +482,6 @@ export default function RSVPForm() {
         p_accommodations_requested: accommodationsList.length ? accommodationsList : null,
       })
       if (error) throw error
-      if (data?.ok === false && data?.reason === 'already_submitted') {
-        setPhase('already_submitted')
-        return
-      }
       if (data?.ok === false && data?.reason === 'deadline_passed') {
         setPhase('closed')
         return
@@ -465,6 +520,7 @@ export default function RSVPForm() {
     setLookupError(null)
     setContactName('')
     setContactError(null)
+    setIsEditing(false)
   }
 
   async function submitContactRequest(e) {
@@ -494,11 +550,13 @@ export default function RSVPForm() {
         <div className="text-center">
           <RoseIcon />
           <h2 className="font-serif text-3xl text-bark mb-3" style={{ fontWeight: 300 }}>
-            {declined ? 'We\'ll Miss You!' : 'Thank You!'}
+            {declined ? 'We\'ll Miss You!' : isEditing ? 'RSVP Updated!' : 'Thank You!'}
           </h2>
           <p className="font-serif italic text-bark/65 text-lg leading-relaxed">
             {declined
               ? 'We\'re sorry you can\'t make it, but we appreciate you letting us know. You\'ll be in our hearts on the day.'
+              : isEditing
+              ? 'Your changes have been saved. Thank you for keeping us in the loop!'
               : 'Your RSVP has been received. We are overjoyed that you will be joining us for our celebration.'}
           </p>
           <div className="flex items-center justify-center gap-4 mt-6">
@@ -704,9 +762,20 @@ export default function RSVPForm() {
 
       {phase === 'members' && (
         <div>
-          <p className="font-serif italic text-bark/55 text-center text-lg mb-10 -mt-6">
-            Please confirm your RSVP and add any additional guests.
-          </p>
+          {isEditing ? (
+            <div className="text-center mb-10 -mt-6">
+              <p className="font-serif italic text-bark/65 text-lg mb-2">
+                We already have your RSVP — make any changes below and resubmit.
+              </p>
+              <p className="font-sans text-[10px] tracking-widest uppercase text-dustyRose">
+                Editing your RSVP
+              </p>
+            </div>
+          ) : (
+            <p className="font-serif italic text-bark/55 text-center text-lg mb-10 -mt-6">
+              Please confirm your RSVP and add any additional guests.
+            </p>
+          )}
 
           <div className="mb-6 space-y-3">
             <div className="flex items-baseline justify-between">
