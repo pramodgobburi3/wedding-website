@@ -19,7 +19,7 @@ function GoldDivider({ wide = false }) {
 
 function SmallCaps({ children, className = '' }) {
   return (
-    <p className={`font-sans text-[11px] tracking-[0.38em] uppercase text-bark/70 ${className}`}>
+    <p className={`font-sans text-xs tracking-[0.38em] uppercase text-bark/70 ${className}`}>
       {children}
     </p>
   )
@@ -35,14 +35,14 @@ function FamilyBlock({ label, maternalGrandparents, paternalGrandparents, parent
 
       {hasElders && (
         <div className="mb-4">
-          <p className="font-serif italic text-bark/55 text-sm mb-2">With the blessings of</p>
+          <p className="font-serif italic text-bark/55 text-base mb-2">With the blessings of</p>
           {paternalGrandparents && (
-            <p className="font-serif text-bark/70 text-md leading-snug">
+            <p className="font-serif text-bark/70 text-lg leading-snug">
               {paternalGrandparents}
             </p>
           )}
           {maternalGrandparents && (
-            <p className="font-serif text-bark/70 text-md leading-snug mb-1">
+            <p className="font-serif text-bark/70 text-lg leading-snug mb-1">
               {maternalGrandparents}
             </p>
           )}
@@ -51,7 +51,7 @@ function FamilyBlock({ label, maternalGrandparents, paternalGrandparents, parent
 
       <p
         className="font-serif text-bark leading-snug"
-        style={{ fontSize: 'clamp(1rem, 2.5vw, 1.25rem)' }}
+        style={{ fontSize: 'clamp(1.15rem, 3vw, 1.5rem)' }}
       >
         {parents}
       </p>
@@ -132,15 +132,15 @@ export default function OurStory() {
               <span className="text-center px-3 md:px-5">
                 <span
                   className="block font-serif text-gold leading-snug"
-                  style={{ fontSize: 'clamp(1rem, 2.5vw, 1.4rem)', letterSpacing: '0.04em' }}
+                  style={{ fontSize: 'clamp(1.2rem, 3vw, 1.65rem)', letterSpacing: '0.04em' }}
                 >
                   {telugu}
                 </span>
-                <span className="block font-sans text-[10px] tracking-widest uppercase text-bark/50 mt-1">{roman}</span>
-                <span className="block font-serif italic text-bark/50 text-sm mt-0.5">{meaning}</span>
+                <span className="block font-sans text-[11px] tracking-widest uppercase text-bark/50 mt-1">{roman}</span>
+                <span className="block font-serif italic text-bark/50 text-base mt-0.5">{meaning}</span>
               </span>
               {i < arr.length - 1 && (
-                <span className="text-gold/40 self-start mt-1" style={{ fontSize: 'clamp(1rem, 2.5vw, 1.4rem)' }}>|</span>
+                <span className="text-gold/40 self-start mt-1" style={{ fontSize: 'clamp(1.2rem, 3vw, 1.65rem)' }}>|</span>
               )}
             </span>
           ))}
@@ -149,7 +149,7 @@ export default function OurStory() {
         <GoldDivider wide />
 
         {/* ── Opening blessing ── */}
-        <p className="font-serif italic text-bark/70 text-base md:text-lg leading-relaxed mb-8 px-2">
+        <p className="font-serif italic text-bark/70 text-lg md:text-xl leading-relaxed mb-8 px-2">
           With the blessings of the Divine<br />
           and the gracious wishes of friends and family
         </p>
@@ -165,7 +165,7 @@ export default function OurStory() {
         {/* "along with" connector */}
         <div className="flex items-center justify-center gap-3 my-6">
           <div className="h-px w-10 bg-gold/45" />
-          <p className="font-script text-gold text-xl px-1">along with</p>
+          <p className="font-script text-gold text-2xl px-1">along with</p>
           <div className="h-px w-10 bg-gold/45" />
         </div>
 
@@ -180,23 +180,27 @@ export default function OurStory() {
         <GoldDivider wide />
 
         {/* ── Request line ── */}
-        <p className="font-serif italic text-bark/70 text-base md:text-lg leading-relaxed mb-8 px-4">
+        <p className="font-serif italic text-bark/70 text-lg md:text-xl leading-relaxed mb-8 px-4">
           request the honour of your presence<br />
           at the auspicious wedding of their children
         </p>
 
         {/* ── Couple's names ── */}
         <p
-          className="font-script text-dustyRose leading-none text-2xl">
+          className="font-script text-dustyRose leading-tight"
+          style={{ fontSize: 'clamp(1.85rem, 6vw, 2.5rem)' }}
+        >
           Chi. Sow. Snigdha Om Madiraju
         </p>
         <div className="flex items-center justify-center gap-4 my-2">
           <div className="h-px w-14 bg-gold/45" />
-          <span className="font-serif text-gold text-xl">&amp;</span>
+          <span className="font-serif text-gold text-2xl">&amp;</span>
           <div className="h-px w-14 bg-gold/45" />
         </div>
         <p
-          className="font-script text-dustyRose leading-none mb-10 text-2xl">
+          className="font-script text-dustyRose leading-tight mb-10"
+          style={{ fontSize: 'clamp(1.85rem, 6vw, 2.5rem)' }}
+        >
           Chi. Phani Pramod Gobburi
         </p>
 
@@ -205,7 +209,7 @@ export default function OurStory() {
         {/* ── Date & venue ── */}
         <div className="mb-8">
           <SmallCaps className="mb-2">Sunday · The Sixteenth of August</SmallCaps>
-          <p className="font-script text-gold text-2xl mb-2">Two Thousand & Twenty Six</p>
+          <p className="font-script text-gold text-3xl mb-2">Two Thousand & Twenty Six</p>
           <SmallCaps>Presidential Ballroom · Waldorf Astoria DC</SmallCaps>
         </div>
       </div>

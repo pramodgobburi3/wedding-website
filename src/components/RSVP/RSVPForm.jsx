@@ -552,7 +552,7 @@ export default function RSVPForm() {
           <h2 className="font-serif text-3xl text-bark mb-3" style={{ fontWeight: 300 }}>
             {declined ? 'We\'ll Miss You!' : isEditing ? 'RSVP Updated!' : 'Thank You!'}
           </h2>
-          <p className="font-serif italic text-bark/65 text-lg leading-relaxed">
+          <p className="font-serif italic text-bark/70 text-lg md:text-xl leading-relaxed">
             {declined
               ? 'We\'re sorry you can\'t make it, but we appreciate you letting us know. You\'ll be in our hearts on the day.'
               : isEditing
@@ -582,7 +582,7 @@ export default function RSVPForm() {
           <h2 className="font-serif text-3xl text-bark mb-3" style={{ fontWeight: 300 }}>
             Thanks for Reaching Out
           </h2>
-          <p className="font-serif italic text-bark/65 text-lg leading-relaxed">
+          <p className="font-serif italic text-bark/70 text-lg md:text-xl leading-relaxed">
             We've received your message and will be in touch with you shortly.
           </p>
           <div className="flex items-center justify-center gap-4 mt-6">
@@ -608,7 +608,7 @@ export default function RSVPForm() {
           <h2 className="font-serif text-3xl text-bark mb-3" style={{ fontWeight: 300 }}>
             Already Received
           </h2>
-          <p className="font-serif italic text-bark/65 text-lg leading-relaxed">
+          <p className="font-serif italic text-bark/70 text-lg md:text-xl leading-relaxed">
             We already have your RSVP on file — thank you! If you need to make
             any changes, please reach out to us.
           </p>
@@ -631,7 +631,7 @@ export default function RSVPForm() {
           <h2 className="font-serif text-3xl text-bark mb-3" style={{ fontWeight: 300 }}>
             RSVPs Are Closed
           </h2>
-          <p className="font-serif italic text-bark/65 text-lg leading-relaxed">
+          <p className="font-serif italic text-bark/70 text-lg md:text-xl leading-relaxed">
             {deadline
               ? <>The RSVP deadline of {formatEventDate(deadline)} has passed. If you still need to respond, please reach out to us directly.</>
               : <>RSVPs are no longer being accepted. If you still need to respond, please reach out to us directly.</>}
@@ -653,7 +653,7 @@ export default function RSVPForm() {
 
       {phase === 'phone' && (
         <form onSubmit={handlePhoneLookup} noValidate>
-          <p className="font-serif italic text-bark/55 text-center text-lg mb-3 -mt-6">
+          <p className="font-serif italic text-bark/70 text-center text-lg md:text-xl mb-3 -mt-6">
             We can't wait to celebrate with you —
             enter your phone number to get started.
           </p>
@@ -690,7 +690,7 @@ export default function RSVPForm() {
               {loading ? <><Spinner /><span>Looking up…</span></> : 'Continue'}
             </button>
           </div>
-          <SmsConsent />
+          {/* <SmsConsent /> */}
         </form>
       )}
 
@@ -699,7 +699,7 @@ export default function RSVPForm() {
       {phase === 'not_found' && (
         <div>
           <div className="text-center mb-8 -mt-6">
-            <p className="font-serif italic text-bark/65 text-lg leading-relaxed mb-3">
+            <p className="font-serif italic text-bark/70 text-lg md:text-xl leading-relaxed mb-3">
               We're so sorry — we couldn't find an invitation matching that phone number.
             </p>
             <p className="font-sans text-sm text-bark/60">
@@ -753,7 +753,7 @@ export default function RSVPForm() {
                 {loading ? <><Spinner /><span>Sending…</span></> : 'Notify the Hosts'}
               </button>
             </div>
-            <SmsConsent />
+            {/* <SmsConsent /> */}
           </form>
         </div>
       )}
@@ -764,7 +764,7 @@ export default function RSVPForm() {
         <div>
           {isEditing ? (
             <div className="text-center mb-10 -mt-6">
-              <p className="font-serif italic text-bark/65 text-lg mb-2">
+              <p className="font-serif italic text-bark/70 text-lg md:text-xl mb-2">
                 We already have your RSVP — make any changes below and resubmit.
               </p>
               <p className="font-sans text-[10px] tracking-widest uppercase text-dustyRose">
@@ -772,7 +772,7 @@ export default function RSVPForm() {
               </p>
             </div>
           ) : (
-            <p className="font-serif italic text-bark/55 text-center text-lg mb-10 -mt-6">
+            <p className="font-serif italic text-bark/70 text-center text-lg md:text-xl mb-10 -mt-6">
               Please confirm your RSVP and add any additional guests.
             </p>
           )}
@@ -867,11 +867,11 @@ export default function RSVPForm() {
       {phase === 'select_events' && (
         <form onSubmit={handleSubmit} noValidate>
           {attendingSet.size === 0 ? (
-            <p className="font-serif italic text-bark/55 text-center text-lg mb-10 -mt-6">
+            <p className="font-serif italic text-bark/70 text-center text-lg md:text-xl mb-10 -mt-6">
               We're sorry to hear you can't make it. Please send your regards below.
             </p>
           ) : (
-            <p className="font-serif italic text-bark/55 text-center text-lg mb-10 -mt-6">
+            <p className="font-serif italic text-bark/70 text-center text-lg md:text-xl mb-10 -mt-6">
               For each event, select who will be attending.
             </p>
           )}
@@ -953,7 +953,7 @@ export default function RSVPForm() {
         <form onSubmit={e => { e.preventDefault(); performSubmit() }} noValidate>
           <div className="text-center mb-10 -mt-6">
             <p className="font-script text-dustyRose text-2xl mb-2">Hotel Accommodations</p>
-            <p className="font-serif italic text-bark/65 text-lg leading-relaxed">
+            <p className="font-serif italic text-bark/70 text-lg md:text-xl leading-relaxed">
               We have arranged hotel accommodations for all our guests
             </p>
           </div>

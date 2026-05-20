@@ -165,7 +165,7 @@ export default function Hero() {
       <div className="relative z-10 text-center px-6 max-w-3xl mx-auto">
 
         {/* Tagline — moves fastest on scroll (deepest parallax layer) */}
-        <motion.div style={{ y: taglineY }}>
+        <motion.div style={{ y: taglineY, marginBottom: 40 }}>
           <motion.p
             className="font-script text-gold text-xl md:text-2xl mb-2 text-shadow-light"
             variants={fadeUp}
@@ -173,7 +173,7 @@ export default function Hero() {
             animate={textAnimate}
             transition={{ duration: 0.9, delay: 0.15 }}
           >
-            Forever More
+            “What is done in love is well done" -Vincent van Gogh
           </motion.p>
         </motion.div>
 
@@ -270,6 +270,12 @@ export default function Hero() {
               RSVP Coming Soon
             </span>
           )}
+          <a
+            href="#registry"
+            className="inline-block font-sans text-xs tracking-[0.25em] uppercase px-10 py-3.5 rounded-full border border-blush/50 text-ivory hover:bg-blush/15 transition-all duration-300"
+          >
+            Registry
+          </a>
         </motion.div>
       </div>
 

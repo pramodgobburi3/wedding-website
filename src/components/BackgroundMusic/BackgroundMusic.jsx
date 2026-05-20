@@ -3,7 +3,7 @@ import { useEffect, useRef, useState } from 'react'
 // Replace with your own YouTube video ID. To find it, open the YouTube URL —
 // the ID is the value after `v=` (e.g. dQw4w9WgXcQ in
 // https://www.youtube.com/watch?v=dQw4w9WgXcQ).
-const VIDEO_ID = 'dQw4w9WgXcQ'
+const VIDEO_ID = 'P1aHG6IqCtM'
 
 function SpeakerOnIcon() {
   return (
@@ -30,6 +30,19 @@ export default function BackgroundMusic() {
   const containerRef = useRef(null)
   const [muted, setMuted] = useState(true)
   const [ready, setReady] = useState(false)
+  const [showHint, setShowHint] = useState(false)
+
+  // Once the player is ready, nudge the guest that music is available. Shows on
+  // every page load — dismissing only hides it for the current view.
+  useEffect(() => {
+    if (!ready) return
+    const t = setTimeout(() => setShowHint(true), 1200)
+    return () => clearTimeout(t)
+  }, [ready])
+
+  function dismissHint() {
+    setShowHint(false)
+  }
 
   useEffect(() => {
     let cancelled = false
@@ -41,7 +54,7 @@ export default function BackgroundMusic() {
         width:   '0',
         videoId: VIDEO_ID,
         playerVars: {
-          autoplay:       1,
+          autoplay:       0,  // don't play on load — starts on first speaker click
           mute:           1,
           loop:           1,
           playlist:       VIDEO_ID,  // required for loop to actually loop
@@ -82,6 +95,7 @@ export default function BackgroundMusic() {
 
   function toggle() {
     if (!ready || !playerRef.current) return
+    dismissHint()
     if (muted) {
       playerRef.current.unMute()
       playerRef.current.playVideo()
@@ -109,6 +123,55 @@ export default function BackgroundMusic() {
         }}
       >
         <div ref={containerRef} />
+      </div>
+
+      {/* Hint bubble — nudges guests that music is available */}
+      <div
+        aria-hidden={!showHint}
+        className="fixed bottom-20 right-6 z-50 max-w-[15rem] transition-all duration-500"
+        style={{
+          opacity:        showHint ? 1 : 0,
+          transform:      showHint ? 'translateY(0)' : 'translateY(8px)',
+          pointerEvents:  showHint ? 'auto' : 'none',
+        }}
+      >
+        <div
+          className="relative rounded-2xl px-4 py-3 shadow-lg backdrop-blur-sm border"
+          style={{
+            backgroundColor: 'rgba(244, 232, 214, 0.96)',
+            borderColor:     'rgba(196, 126, 133, 0.5)',
+            color:           '#5C3D2E',
+          }}
+        >
+          <button
+            type="button"
+            onClick={dismissHint}
+            aria-label="Dismiss"
+            className="absolute -top-2 -left-2 w-5 h-5 rounded-full flex items-center justify-center text-xs leading-none border"
+            style={{
+              backgroundColor: 'rgba(244, 232, 214, 1)',
+              borderColor:     'rgba(196, 126, 133, 0.5)',
+              color:           '#5C3D2E',
+            }}
+          >
+            ×
+          </button>
+          <button type="button" onClick={toggle} className="text-left">
+            {/* <p className="font-script text-dustyRose text-lg leading-tight mb-0.5">A little music?</p> */}
+            <p className="font-sans text-xs text-bark/70 leading-snug">
+              Click the speaker to enjoy a musical experience&nbsp;♪
+            </p>
+          </button>
+          {/* Caret pointing down toward the button */}
+          <div
+            className="absolute right-5 -bottom-1.5 w-3 h-3 rotate-45 border-b border-r"
+            style={{
+              backgroundColor: 'rgba(244, 232, 214, 0.96)',
+              borderColor:     'rgba(196, 126, 133, 0.5)',
+            }}
+            aria-hidden="true"
+          />
+        </div>
       </div>
 
       <button

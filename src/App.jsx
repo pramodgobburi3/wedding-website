@@ -21,6 +21,7 @@ const OurStory       = lazy(() => import('./components/OurStory/OurStory'))
 const Celebrations   = lazy(() => import('./components/OurStory/Celebrations'))
 const Gallery        = lazy(() => import('./components/Gallery/Gallery'))
 const RSVPForm       = lazy(() => import('./components/RSVP/RSVPForm'))
+const Registry       = lazy(() => import('./components/Registry/Registry'))
 
 function SectionFallback() {
   return <div className="min-h-[400px]" aria-hidden="true" />
@@ -153,7 +154,7 @@ export default function App() {
     <>
       <ScrollProgress />
       <BotanicalCursor />
-      {/* <BackgroundMusic /> */}
+      <BackgroundMusic />
 
       {/* Page root — provides the positioning context so the gradient
           spans the full scrollable height, not just the viewport */}
@@ -206,11 +207,11 @@ export default function App() {
               </Suspense>
             </SectionCard>
 
-            <SectionCard>
+            {/* <SectionCard>
               <Suspense fallback={<SectionFallback />}>
                 <Celebrations />
               </Suspense>
-            </SectionCard>
+            </SectionCard> */}
 
             <SectionCard>
               <Suspense fallback={<SectionFallback />}>
@@ -225,6 +226,12 @@ export default function App() {
                 </Suspense>
               </SectionCard>
             )}
+
+            <SectionCard>
+              <Suspense fallback={<SectionFallback />}>
+                <Registry />
+              </Suspense>
+            </SectionCard>
           </div>
           <Footer />
         </main>

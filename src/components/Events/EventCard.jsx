@@ -346,7 +346,7 @@ export default function EventCard({ id, name, tagline, date, time, venue, dressc
     >
       <div
         className="relative w-full"
-        style={{ perspective: '1200px', height: 340, cursor: 'none' }}
+        style={{ perspective: '1200px', height: 380, cursor: 'none' }}
         onPointerEnter={e => { if (e.pointerType === 'mouse') setFlipped(true) }}
         onPointerLeave={e => { if (e.pointerType === 'mouse') setFlipped(false) }}
         onClick={() => setFlipped(f => !f)}
@@ -393,10 +393,10 @@ export default function EventCard({ id, name, tagline, date, time, venue, dressc
               }
             </div>
 
-            <h3 className="font-serif text-2xl text-bark mb-1" style={{ fontWeight: 400 }}>
+            <h3 className="font-serif text-3xl text-bark mb-1" style={{ fontWeight: 400 }}>
               {name}
             </h3>
-            <p className="font-script text-base mb-4" style={{ color: accent }}>
+            <p className="font-script text-lg mb-4" style={{ color: accent }}>
               {tagline}
             </p>
             <p className="font-sans text-[10px] tracking-widest uppercase text-bark/30 absolute bottom-4 pointer-events-none select-none">
@@ -415,7 +415,7 @@ export default function EventCard({ id, name, tagline, date, time, venue, dressc
             {/* Small Om on back */}
             <span className="absolute top-3 right-4 font-serif text-lg opacity-20" style={{ color: accent }} aria-hidden="true">ॐ</span>
 
-            <h3 className="font-serif text-xl text-bark mb-4" style={{ fontWeight: 400 }}>{name}</h3>
+            <h3 className="font-serif text-2xl text-bark mb-4" style={{ fontWeight: 400 }}>{name}</h3>
             <div className="space-y-3">
               <DetailRow label="Date"   value={date}      accent={accent} />
               <DetailRow label="Time"   value={time}      accent={accent} />
@@ -446,9 +446,9 @@ export default function EventCard({ id, name, tagline, date, time, venue, dressc
 
 function DetailRow({ label, value, accent }) {
   return (
-    <div className="flex gap-3 text-sm">
+    <div className="flex gap-3 text-base">
       <span
-        className="font-sans text-[10px] tracking-widest uppercase mt-0.5 flex-shrink-0 w-12"
+        className="font-sans text-[11px] tracking-widest uppercase mt-1 flex-shrink-0 w-12"
         style={{ color: accent }}
       >
         {label}
