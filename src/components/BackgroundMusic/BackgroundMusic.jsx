@@ -28,6 +28,7 @@ function SpeakerOffIcon() {
 export default function BackgroundMusic() {
   const playerRef    = useRef(null)
   const containerRef = useRef(null)
+  const wantSoundRef = useRef(false)
   const [muted, setMuted] = useState(true)
   const [ready, setReady] = useState(false)
   const [showHint, setShowHint] = useState(false)
@@ -67,6 +68,16 @@ export default function BackgroundMusic() {
         },
         events: {
           onReady: () => { if (!cancelled) setReady(true) },
+          // Mobile players often ignore an unMute() issued before playback has
+          // actually started. Re-apply it once the video reaches PLAYING so the
+          // first tap reliably produces sound.
+          onStateChange: (e) => {
+            const PLAYING = window.YT?.PlayerState?.PLAYING ?? 1
+            if (e.data === PLAYING && wantSoundRef.current) {
+              e.target.unMute()
+              e.target.setVolume(100)
+            }
+          },
         },
       })
     }
@@ -96,12 +107,19 @@ export default function BackgroundMusic() {
   function toggle() {
     if (!ready || !playerRef.current) return
     dismissHint()
+    const p = playerRef.current
     if (muted) {
-      playerRef.current.unMute()
-      playerRef.current.playVideo()
+      // Start playback within the user gesture, then unmute. If the unmute
+      // doesn't "stick" before playback begins (common on mobile), the
+      // onStateChange PLAYING handler re-applies it.
+      wantSoundRef.current = true
+      p.playVideo()
+      p.unMute()
+      p.setVolume(100)
       setMuted(false)
     } else {
-      playerRef.current.mute()
+      wantSoundRef.current = false
+      p.mute()
       setMuted(true)
     }
   }

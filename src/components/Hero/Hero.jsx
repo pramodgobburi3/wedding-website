@@ -271,6 +271,18 @@ export default function Hero() {
             </span>
           )}
           <a
+            href="#venues"
+            className="inline-block font-sans text-xs tracking-[0.25em] uppercase px-10 py-3.5 rounded-full border border-blush/50 text-ivory hover:bg-blush/15 transition-all duration-300"
+          >
+            Venues
+          </a>
+          <a
+            href="#travel"
+            className="inline-block font-sans text-xs tracking-[0.25em] uppercase px-10 py-3.5 rounded-full border border-blush/50 text-ivory hover:bg-blush/15 transition-all duration-300"
+          >
+            Travel
+          </a>
+          <a
             href="#registry"
             className="inline-block font-sans text-xs tracking-[0.25em] uppercase px-10 py-3.5 rounded-full border border-blush/50 text-ivory hover:bg-blush/15 transition-all duration-300"
           >
@@ -279,9 +291,9 @@ export default function Hero() {
         </motion.div>
       </div>
 
-      {/* Scroll indicator */}
+      {/* Scroll indicator — hidden on mobile where the CTAs reach the bottom */}
       <motion.div
-        className="absolute bottom-8 left-1/2 -translate-x-1/2 z-10 flex flex-col items-center gap-2"
+        className="absolute bottom-8 left-1/2 -translate-x-1/2 z-10 hidden md:flex flex-col items-center gap-2"
         aria-hidden="true"
         initial={{ opacity: 0 }}
         animate={showText ? { opacity: 1 } : { opacity: 0 }}

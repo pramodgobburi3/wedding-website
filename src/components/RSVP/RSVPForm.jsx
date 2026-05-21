@@ -1,6 +1,7 @@
 import { useState, useRef, useEffect } from 'react'
 import { gsap } from 'gsap'
 import { supabase } from '../../lib/supabase'
+import { normalizePhone } from '../../lib/phone'
 import rsvpBg from '../../assets/photos/rsvp_background.webp'
 
 function formatEventDate(dateStr) {
@@ -12,16 +13,6 @@ function formatEventDate(dateStr) {
 
 function formatEventTime(timeStr) {
   return timeStr || 'TBD'
-}
-
-function normalizePhone(raw) {
-  const trimmed = (raw ?? '').trim()
-  const digits  = trimmed.replace(/\D/g, '')
-  if (trimmed.startsWith('+') && digits.length > 10) return digits.slice(-10)
-  if (digits.length > 10 && digits.startsWith('91'))  return digits.slice(2)
-  if (digits.length > 10 && digits.startsWith('44')) return digits.slice(2)
-  if (digits.length === 11 && digits.startsWith('1')) return digits.slice(1)
-  return digits
 }
 
 // ─── Shared UI ────────────────────────────────────────────────────────────────

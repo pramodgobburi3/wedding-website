@@ -21,6 +21,8 @@ const OurStory       = lazy(() => import('./components/OurStory/OurStory'))
 const Celebrations   = lazy(() => import('./components/OurStory/Celebrations'))
 const Gallery        = lazy(() => import('./components/Gallery/Gallery'))
 const RSVPForm       = lazy(() => import('./components/RSVP/RSVPForm'))
+const Venues         = lazy(() => import('./components/Venues/Venues'))
+const Travel         = lazy(() => import('./components/Travel/Travel'))
 const Registry       = lazy(() => import('./components/Registry/Registry'))
 
 function SectionFallback() {
@@ -226,6 +228,18 @@ export default function App() {
                 </Suspense>
               </SectionCard>
             )}
+
+            <SectionCard>
+              <Suspense fallback={<SectionFallback />}>
+                <Venues />
+              </Suspense>
+            </SectionCard>
+
+            <SectionCard>
+              <Suspense fallback={<SectionFallback />}>
+                <Travel />
+              </Suspense>
+            </SectionCard>
 
             <SectionCard>
               <Suspense fallback={<SectionFallback />}>

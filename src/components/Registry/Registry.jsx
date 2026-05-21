@@ -19,7 +19,8 @@ export default function Registry() {
 
         <p className="font-serif italic text-bark/70 text-lg md:text-xl leading-relaxed">
           Your presence at our celebration is the greatest gift of all. 
-          As we’ll be moving shortly after our wedding, we kindly request no boxed gifts. 
+          As we’ll be moving shortly after our wedding, we kindly request no boxed gifts.
+          Thank you for your love and support!
         </p>
 
         <div className="flex items-center justify-center gap-4 mt-10">
@@ -28,7 +29,7 @@ export default function Registry() {
           <div className="h-px w-12 bg-gold/50" />
         </div>
         <p className="font-sans font-light text-bark/70 text-md mt-4">
-          Thank you for your love and support!
+          Snigdha & Pramod
         </p>
       </div>
     </section>

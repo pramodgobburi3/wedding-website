@@ -35,9 +35,10 @@ export default function Footer() {
         {[
           ['Home',          '#home'],
           ['Invitation',    '#invitation'],
-          ['Celebrations',  '#celebrations'],
           ['Gallery',       '#gallery'],
           ['RSVP',          '#rsvp'],
+          ['Venues',        '#venues'],
+          ['Travel',        '#travel'],
         ].map(([label, href]) => (
           <a
             key={label}
