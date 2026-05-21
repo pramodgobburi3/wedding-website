@@ -30,6 +30,7 @@ export default function ResponsesView() {
       { label: 'Name',            value: r => r.guest?.party_name ?? r.guest?.name ?? r.name ?? '' },
       { label: 'Group',           value: r => r.guest?.group?.name ? groupLabel(r.guest.group.name) : '' },
       { label: 'Phone',           value: r => r.phone },
+      { label: 'Email',           value: r => r.accommodation_email ?? '' },
       { label: 'Events',          value: r => (r.events_attending ?? []).join(', ') },
       { label: 'Guests',          value: r => r.guest_count },
       { label: 'Note',            value: r => r.message ?? '' },
@@ -65,6 +66,7 @@ export default function ResponsesView() {
               <th className="px-4 py-3 text-xs font-medium text-gray-500 uppercase tracking-wide">Name</th>
               <th className="px-4 py-3 text-xs font-medium text-gray-500 uppercase tracking-wide">Group</th>
               <th className="px-4 py-3 text-xs font-medium text-gray-500 uppercase tracking-wide">Phone</th>
+              <th className="px-4 py-3 text-xs font-medium text-gray-500 uppercase tracking-wide">Email</th>
               <th className="px-4 py-3 text-xs font-medium text-gray-500 uppercase tracking-wide">Events</th>
               <th className="px-4 py-3 text-xs font-medium text-gray-500 uppercase tracking-wide">#</th>
               <th className="px-4 py-3 text-xs font-medium text-gray-500 uppercase tracking-wide">Note</th>
@@ -95,6 +97,11 @@ export default function ResponsesView() {
                     {r.guest?.group?.name ? groupLabel(r.guest.group.name) : <span className="text-gray-300 italic">—</span>}
                   </td>
                   <td className="px-4 py-3 text-gray-500 font-mono text-xs">{r.phone}</td>
+                  <td className="px-4 py-3 text-gray-600 text-xs">
+                    {r.accommodation_email
+                      ? <a href={`mailto:${r.accommodation_email}`} className="text-rose-500 hover:underline" onClick={e => e.stopPropagation()}>{r.accommodation_email}</a>
+                      : <span className="text-gray-300 italic">—</span>}
+                  </td>
                   <td className="px-4 py-3 text-gray-500 text-xs">{r.events_attending?.join(', ') || '—'}</td>
                   <td className="px-4 py-3 text-gray-700 font-medium">{r.guest_count}</td>
                   <td className="px-4 py-3 text-gray-400 text-xs max-w-xs truncate">{r.message || '—'}</td>
@@ -104,7 +111,7 @@ export default function ResponsesView() {
                 </tr>,
                 hasParty && isExpanded && (
                   <tr key={`${r.id}-party`} className="bg-rose-50/40">
-                    <td colSpan={7} className="px-6 py-3">
+                    <td colSpan={8} className="px-6 py-3">
                       <p className="text-xs font-medium text-gray-500 mb-2 uppercase tracking-wide">Party breakdown</p>
                       <div className="space-y-1">
                         {Object.entries(r.member_attendance).map(([guestId, member]) => (
@@ -130,7 +137,7 @@ export default function ResponsesView() {
             })}
             {responses.length === 0 && (
               <tr>
-                <td colSpan={7} className="px-4 py-8 text-center text-sm text-gray-400">No RSVPs yet</td>
+                <td colSpan={8} className="px-4 py-8 text-center text-sm text-gray-400">No RSVPs yet</td>
               </tr>
             )}
           </tbody>

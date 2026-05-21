@@ -54,7 +54,7 @@ export default function Venues() {
 
         <VenueBlock
           label="Hotel & Wedding Events"
-          name="The Waldorf Astoria Washington DC"
+          name="Waldorf Astoria Washington DC"
           address="1100 Pennsylvania Ave NW, Washington, DC 20004"
         />
 

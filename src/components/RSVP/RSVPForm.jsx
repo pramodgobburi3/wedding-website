@@ -223,6 +223,8 @@ export default function RSVPForm() {
   const [attendingSet, setAttendingSet]   = useState(new Set())
   const [memberEvents, setMemberEvents]   = useState({})
   const [accommodations, setAccommodations] = useState(new Set())
+  const [accommodationEmail, setAccommodationEmail] = useState('')
+  const [accommodationEmailError, setAccommodationEmailError] = useState(null)
   // Edit-mode tracking: true when the lookup found an existing RSVP and the
   // form is pre-filled with it. Drives copy on the form + success screens.
   const [isEditing, setIsEditing]         = useState(false)
@@ -235,6 +237,19 @@ export default function RSVPForm() {
     supabase.from('app_settings').select('value').eq('key', 'rsvp_deadline').maybeSingle()
       .then(({ data }) => setDeadline(data?.value ?? null))
   }, [])
+
+  // When the guest advances through the form, the previous (often long) step
+  // collapses and their scroll position would otherwise leave them stranded
+  // below the section. Reset to the top of the RSVP section on each phase
+  // change — but skip the initial render so the page doesn't jump on load.
+  const didMountRef = useRef(false)
+  useEffect(() => {
+    if (!didMountRef.current) {
+      didMountRef.current = true
+      return
+    }
+    sectionRef.current?.scrollIntoView({ behavior: 'smooth', block: 'start' })
+  }, [phase])
 
   // Local-date comparison (avoid UTC off-by-one): treat the deadline as a
   // calendar date in the viewer's locale.
@@ -350,11 +365,13 @@ export default function RSVPForm() {
       setAttendingSet(initAttending)
       setMemberEvents(initEvents)
 
-      // Restore prior accommodation selections.
+      // Restore prior accommodation selections + email.
       const prevAccoms = Array.isArray(existing?.accommodations_requested)
         ? existing.accommodations_requested
         : []
       setAccommodations(new Set(prevAccoms))
+      setAccommodationEmail(existing?.accommodation_email ?? '')
+      setAccommodationEmailError(null)
 
       setIsEditing(!!existing)
       setPhase('members')
@@ -462,6 +479,16 @@ export default function RSVPForm() {
       .map(d => d.date)
       .filter(date => accommodations.has(date))
 
+    // Email is required only when the party requested at least one hotel night.
+    const email = accommodationEmail.trim()
+    if (accommodationsList.length > 0) {
+      if (!/^[^\s@]+@[^\s@]+\.[^\s@]+$/.test(email)) {
+        setAccommodationEmailError('Please enter a valid email so we can coordinate your stay.')
+        setLoading(false)
+        return
+      }
+    }
+
     try {
       const { data, error } = await supabase.rpc('submit_rsvp', {
         p_guest_id:                guestId,
@@ -471,6 +498,7 @@ export default function RSVPForm() {
         p_message:                 null,
         p_member_attendance:       memberAttendance,
         p_accommodations_requested: accommodationsList.length ? accommodationsList : null,
+        p_accommodation_email:     accommodationsList.length ? email : null,
       })
       if (error) throw error
       if (data?.ok === false && data?.reason === 'deadline_passed') {
@@ -846,7 +874,7 @@ export default function RSVPForm() {
               {loading
                 ? <><Spinner /><span>Sending…</span></>
                 : namesIncomplete ? 'Enter All Names'
-                : attendingSet.size === 0 ? 'egrets'
+                : attendingSet.size === 0 ? 'Send Blessings'
                 : 'Continue'}
             </button>
           </div>
@@ -859,7 +887,8 @@ export default function RSVPForm() {
         <form onSubmit={handleSubmit} noValidate>
           {attendingSet.size === 0 ? (
             <p className="font-serif italic text-bark/70 text-center text-lg md:text-xl mb-10 -mt-6">
-              We're sorry to hear you can't make it. Please send your regards below.
+              We’re sorry to hear you won’t be able to make it, but thank you for letting us know. 
+              You’ll be in our thoughts on our special day!
             </p>
           ) : (
             <p className="font-serif italic text-bark/70 text-center text-lg md:text-xl mb-10 -mt-6">
@@ -987,6 +1016,30 @@ export default function RSVPForm() {
               Don't need a room? Just leave them all unchecked.
             </p>
           </div>
+
+          {accommodations.size > 0 && (
+            <div className="mb-8">
+              <label htmlFor="accommodation-email" className={labelBase}>Please enter your email</label>
+              <input
+                id="accommodation-email"
+                type="email"
+                autoComplete="email"
+                placeholder="you@example.com"
+                value={accommodationEmail}
+                onChange={e => { setAccommodationEmail(e.target.value); setAccommodationEmailError(null) }}
+                className={inputBase}
+                aria-required="true"
+              />
+              <p className="font-sans text-xs text-bark/45 italic mt-2">
+                We'll use this to coordinate your stay with the hotel.
+              </p>
+              {accommodationEmailError && (
+                <p role="alert" className="mt-2 font-sans text-xs text-dustyRose">
+                  {accommodationEmailError}
+                </p>
+              )}
+            </div>
+          )}
 
           {submitError && (
             <div role="alert" className="mb-6 p-4 bg-dustyRose/10 border border-dustyRose/30 rounded text-center">

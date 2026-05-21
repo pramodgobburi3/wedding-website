@@ -24,7 +24,7 @@ export default function AccommodationsView() {
     const [{ data: resp, error: respErr }, { data: ds, error: dsErr }] = await Promise.all([
       supabase
         .from('rsvp_responses')
-        .select('id, phone, guest_count, accommodations_requested, member_attendance, submitted_at, guest:guests(name, party_name)')
+        .select('id, phone, guest_count, accommodations_requested, accommodation_email, member_attendance, submitted_at, guest:guests(name, party_name)')
         .not('accommodations_requested', 'is', null)
         .order('submitted_at', { ascending: false }),
       supabase.from('accommodation_dates').select('*').order('date'),
@@ -70,6 +70,7 @@ export default function AccommodationsView() {
         id:          r.id,
         name:        r.guest?.party_name ?? r.guest?.name ?? '—',
         phone:       r.phone,
+        email:       r.accommodation_email ?? '',
         guestCount:  r.guest_count,
         nights:      r.accommodations_requested,
         submittedAt: r.submitted_at,
@@ -87,6 +88,7 @@ export default function AccommodationsView() {
     const csv = toCSV([
       { label: 'Name',           value: r => r.name },
       { label: 'Phone',          value: r => r.phone },
+      { label: 'Email',          value: r => r.email },
       { label: 'Guests',         value: r => r.guestCount },
       { label: 'Nights',         value: r => r.nights.map(formatDate).join('; ') },
       { label: 'Submitted',      value: r => new Date(r.submittedAt).toISOString() },
@@ -177,6 +179,7 @@ export default function AccommodationsView() {
                   <th className="px-4 py-3 text-xs font-medium text-gray-500 uppercase tracking-wide">Name</th>
                   <th className="px-4 py-3 text-xs font-medium text-gray-500 uppercase tracking-wide">Guests</th>
                   <th className="px-4 py-3 text-xs font-medium text-gray-500 uppercase tracking-wide">Nights</th>
+                  <th className="px-4 py-3 text-xs font-medium text-gray-500 uppercase tracking-wide">Email</th>
                   <th className="px-4 py-3 text-xs font-medium text-gray-500 uppercase tracking-wide">Phone</th>
                   <th className="px-4 py-3 text-xs font-medium text-gray-500 uppercase tracking-wide">Submitted</th>
                 </tr>
@@ -211,6 +214,11 @@ export default function AccommodationsView() {
                           ))}
                         </div>
                       </td>
+                      <td className="px-4 py-3 text-gray-600 text-xs">
+                        {r.email
+                          ? <a href={`mailto:${r.email}`} className="text-rose-500 hover:underline" onClick={e => e.stopPropagation()}>{r.email}</a>
+                          : <span className="text-gray-300 italic">—</span>}
+                      </td>
                       <td className="px-4 py-3 text-gray-500 font-mono text-xs">{r.phone}</td>
                       <td className="px-4 py-3 text-gray-400 text-xs whitespace-nowrap">
                         {new Date(r.submittedAt).toLocaleDateString()}
@@ -218,7 +226,7 @@ export default function AccommodationsView() {
                     </tr>,
                     hasParty && isExpanded && (
                       <tr key={`${r.id}-members`} className="bg-rose-50/40">
-                        <td colSpan={5} className="px-6 py-3">
+                        <td colSpan={6} className="px-6 py-3">
                           <p className="text-xs font-medium text-gray-500 mb-2 uppercase tracking-wide">Party members</p>
                           <div className="flex flex-wrap gap-x-4 gap-y-1">
                             {r.members.map((m, i) => (

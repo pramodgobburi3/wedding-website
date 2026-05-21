@@ -292,7 +292,7 @@ export default function Hero() {
       </div>
 
       {/* Scroll indicator — hidden on mobile where the CTAs reach the bottom */}
-      <motion.div
+      {/* <motion.div
         className="absolute bottom-8 left-1/2 -translate-x-1/2 z-10 hidden md:flex flex-col items-center gap-2"
         aria-hidden="true"
         initial={{ opacity: 0 }}
@@ -303,7 +303,7 @@ export default function Hero() {
           Scroll
         </span>
         <div className="w-px h-10 bg-gradient-to-b from-ivory/40 to-transparent" />
-      </motion.div>
+      </motion.div> */}
     </section>
   )
 }

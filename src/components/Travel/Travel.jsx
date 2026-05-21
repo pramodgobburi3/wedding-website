@@ -56,13 +56,13 @@ export default function Travel() {
 
         <p className="font-sans text-xs tracking-widest uppercase text-dustyRose mb-4">Please Note</p>
         <p className="font-serif italic text-bark/70 text-lg md:text-xl leading-relaxed">
-          For our family and friends staying at the hotel, we'll be providing
-          shuttle service to and from the hotel and our Sangeet and Reception
+          For our family and friends staying at the hotel, we will provide
+          shuttle services to and from the hotel and our Sangeet and Reception
           venues.
         </p>
         <p className="font-serif italic text-bark/70 text-lg md:text-xl leading-relaxed mt-5">
-          For our family and friends who are local to DC, we'll be providing
-          valet service at the event venues.
+          For our family and friends who are local to DC, we will provide
+          valet services at the event venues.
         </p>
 
         <p className="font-serif italic text-bark/55 text-base md:text-lg leading-relaxed mt-8">
