@@ -8,8 +8,7 @@
     "build": "vite build",
     "preview": "vite preview",
     "predeploy": "vite build",
-    "deploy": "gh-pages -d dist --cname wedding.snigdhaandpramod.com",
-    "deploy:main": "gh-pages -d dist --cname snigdhaandpramod.com"
+    "deploy": "gh-pages -d dist --cname snigdhaandpramod.com"
   },
   "dependencies": {
     "@lottiefiles/react-lottie-player": "^3.5.4",

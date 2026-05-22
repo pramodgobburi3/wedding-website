@@ -8,32 +8,33 @@ function preload(url) {
   img.src = url
 }
 
-export default function Lightbox({ photos, selectedIndex, onClose, onNavigate }) {
-  const photo = photos[selectedIndex]
+export default function Lightbox({ items, selectedIndex, onClose, onNavigate }) {
+  const item = items[selectedIndex]
+  const isVideo = item?.type === 'video'
 
   // Track whether the full-res image has finished loading
   const [fullLoaded, setFullLoaded] = useState(false)
 
-  // Reset loaded state whenever the photo changes
+  // Reset loaded state whenever the item changes
   useEffect(() => {
     setFullLoaded(false)
   }, [selectedIndex])
 
-  // Preload adjacent full-res images in the background
+  // Preload adjacent full-res images in the background (skip videos)
   useEffect(() => {
-    const prev = photos[(selectedIndex - 1 + photos.length) % photos.length]
-    const next = photos[(selectedIndex + 1) % photos.length]
-    preload(prev?.src)
-    preload(next?.src)
-  }, [selectedIndex, photos])
+    const prev = items[(selectedIndex - 1 + items.length) % items.length]
+    const next = items[(selectedIndex + 1) % items.length]
+    if (prev?.type !== 'video') preload(prev?.src)
+    if (next?.type !== 'video') preload(next?.src)
+  }, [selectedIndex, items])
 
   const handlePrev = useCallback(() => {
-    onNavigate((selectedIndex - 1 + photos.length) % photos.length)
-  }, [selectedIndex, photos.length, onNavigate])
+    onNavigate((selectedIndex - 1 + items.length) % items.length)
+  }, [selectedIndex, items.length, onNavigate])
 
   const handleNext = useCallback(() => {
-    onNavigate((selectedIndex + 1) % photos.length)
-  }, [selectedIndex, photos.length, onNavigate])
+    onNavigate((selectedIndex + 1) % items.length)
+  }, [selectedIndex, items.length, onNavigate])
 
   useEffect(() => {
     function onKey(e) {
@@ -53,7 +54,7 @@ export default function Lightbox({ photos, selectedIndex, onClose, onNavigate })
 
   return (
     <AnimatePresence>
-      {photo && (
+      {item && (
         <motion.div
           className="fixed inset-0 z-[9000] flex items-center justify-center"
           initial={{ opacity: 0 }}
@@ -68,7 +69,7 @@ export default function Lightbox({ photos, selectedIndex, onClose, onNavigate })
             aria-hidden="true"
           />
 
-          {/* Image container */}
+          {/* Media container */}
           <motion.div
             className="relative z-10 max-w-5xl w-full mx-4 flex flex-col items-center"
             initial={{ scale: 0.9, opacity: 0 }}
@@ -76,42 +77,49 @@ export default function Lightbox({ photos, selectedIndex, onClose, onNavigate })
             exit={{ scale: 0.92, opacity: 0 }}
             transition={{ duration: 0.3, ease: 'easeOut' }}
           >
-            <div className="relative">
-              {/* Thumbnail — shown immediately (already cached from grid) */}
-              <img
-                src={photo.thumb || photo.src}
-                alt={photo.alt}
-                className="max-h-[82vh] w-auto object-contain rounded-sm shadow-2xl"
-                style={{ maxWidth: '100%', display: 'block' }}
+            {isVideo ? (
+              <video
+                key={item.id}
+                src={item.src}
+                poster={item.thumb}
+                controls
+                autoPlay
+                playsInline
+                className="max-h-[82vh] w-auto rounded-sm shadow-2xl"
+                style={{ maxWidth: '100%', display: 'block', cursor: 'auto' }}
               />
-
-              {/* Full-res — loads silently, fades in over the thumbnail when ready */}
-              {photo.thumb && (
+            ) : (
+              <div className="relative">
+                {/* Thumbnail — shown immediately (already cached from grid) */}
                 <img
-                  key={photo.src}
-                  src={photo.src}
-                  alt=""
-                  aria-hidden="true"
-                  onLoad={() => setFullLoaded(true)}
-                  className="absolute inset-0 max-h-[82vh] w-auto object-contain rounded-sm"
-                  style={{
-                    maxWidth: '100%',
-                    opacity: fullLoaded ? 1 : 0,
-                    transition: 'opacity 0.4s ease',
-                  }}
+                  src={item.thumb || item.src}
+                  alt={item.alt}
+                  className="max-h-[82vh] w-auto object-contain rounded-sm shadow-2xl"
+                  style={{ maxWidth: '100%', display: 'block' }}
                 />
-              )}
-            </div>
 
-            {/* Caption */}
-            {photo.alt && (
-              <p className="mt-3 font-serif italic text-ivory/60 text-sm text-center">
-                {photo.alt}
-              </p>
+                {/* Full-res — loads silently, fades in over the thumbnail when ready */}
+                {item.thumb && (
+                  <img
+                    key={item.src}
+                    src={item.src}
+                    alt=""
+                    aria-hidden="true"
+                    onLoad={() => setFullLoaded(true)}
+                    className="absolute inset-0 max-h-[82vh] w-auto object-contain rounded-sm"
+                    style={{
+                      maxWidth: '100%',
+                      opacity: fullLoaded ? 1 : 0,
+                      transition: 'opacity 0.4s ease',
+                    }}
+                  />
+                )}
+              </div>
             )}
+
             {/* Counter */}
-            <p className="mt-1 font-sans text-[10px] tracking-widest uppercase text-ivory/35">
-              {selectedIndex + 1} / {photos.length}
+            <p className="mt-2 font-sans text-[10px] tracking-widest uppercase text-ivory/35">
+              {selectedIndex + 1} / {items.length}
             </p>
           </motion.div>
 

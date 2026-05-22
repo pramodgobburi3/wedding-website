@@ -241,13 +241,13 @@ export default function RSVPForm() {
   // When the guest advances through the form, the previous (often long) step
   // collapses and their scroll position would otherwise leave them stranded
   // below the section. Reset to the top of the RSVP section on each phase
-  // change — but skip the initial render so the page doesn't jump on load.
-  const didMountRef = useRef(false)
+  // change. Keyed off the previous phase value (not a boolean) so it never
+  // fires on the initial render — even under StrictMode's double-invoked
+  // effects in dev, where the page would otherwise jump to RSVP on load.
+  const prevPhaseRef = useRef(phase)
   useEffect(() => {
-    if (!didMountRef.current) {
-      didMountRef.current = true
-      return
-    }
+    if (prevPhaseRef.current === phase) return
+    prevPhaseRef.current = phase
     sectionRef.current?.scrollIntoView({ behavior: 'smooth', block: 'start' })
   }, [phase])
 
@@ -674,7 +674,7 @@ export default function RSVPForm() {
         <form onSubmit={handlePhoneLookup} noValidate>
           <p className="font-serif italic text-bark/70 text-center text-lg md:text-xl mb-3 -mt-6">
             We can't wait to celebrate with you —
-            enter your phone number to get started.
+            Please enter your phone number to get started.
           </p>
           {deadline && (
             <p className="font-sans text-xs tracking-widest uppercase text-bark/55 text-center mb-10">

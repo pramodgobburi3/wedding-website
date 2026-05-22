@@ -1,9 +1,9 @@
 import { useEffect, useRef, useState } from 'react'
 
-// Replace with your own YouTube video ID. To find it, open the YouTube URL —
-// the ID is the value after `v=` (e.g. dQw4w9WgXcQ in
-// https://www.youtube.com/watch?v=dQw4w9WgXcQ).
-const VIDEO_ID = 'P1aHG6IqCtM'
+// Hosted audio file. An HTML5 <audio> element (vs a YouTube iframe) is the only
+// reliable way to start sound on the first tap in iOS Safari — audio.play()
+// called synchronously inside the click handler counts as the user gesture.
+const MUSIC_URL = 'https://vzqjacqifysrfzwlvpci.supabase.co/storage/v1/object/public/assets/music.mp3'
 
 function SpeakerOnIcon() {
   return (
@@ -26,122 +26,45 @@ function SpeakerOffIcon() {
 }
 
 export default function BackgroundMusic() {
-  const playerRef    = useRef(null)
-  const containerRef = useRef(null)
-  const wantSoundRef = useRef(false)
-  const [muted, setMuted] = useState(true)
-  const [ready, setReady] = useState(false)
+  const audioRef = useRef(null)
+  const [playing, setPlaying]   = useState(false)
   const [showHint, setShowHint] = useState(false)
 
-  // Once the player is ready, nudge the guest that music is available. Shows on
-  // every page load — dismissing only hides it for the current view.
+  // Nudge the guest that music is available, shortly after load. Shows on every
+  // page load — dismissing only hides it for the current view.
   useEffect(() => {
-    if (!ready) return
     const t = setTimeout(() => setShowHint(true), 1200)
     return () => clearTimeout(t)
-  }, [ready])
+  }, [])
 
   function dismissHint() {
     setShowHint(false)
   }
 
-  useEffect(() => {
-    let cancelled = false
-
-    function createPlayer() {
-      if (cancelled || !containerRef.current || !window.YT?.Player) return
-      playerRef.current = new window.YT.Player(containerRef.current, {
-        height:  '0',
-        width:   '0',
-        videoId: VIDEO_ID,
-        playerVars: {
-          autoplay:       0,  // don't play on load — starts on first speaker click
-          mute:           1,
-          loop:           1,
-          playlist:       VIDEO_ID,  // required for loop to actually loop
-          controls:       0,
-          modestbranding: 1,
-          playsinline:    1,
-          disablekb:      1,
-          rel:            0,
-          iv_load_policy: 3,
-        },
-        events: {
-          onReady: () => { if (!cancelled) setReady(true) },
-          // Mobile players often ignore an unMute() issued before playback has
-          // actually started. Re-apply it once the video reaches PLAYING so the
-          // first tap reliably produces sound.
-          onStateChange: (e) => {
-            const PLAYING = window.YT?.PlayerState?.PLAYING ?? 1
-            if (e.data === PLAYING && wantSoundRef.current) {
-              e.target.unMute()
-              e.target.setVolume(100)
-            }
-          },
-        },
-      })
-    }
-
-    if (window.YT?.Player) {
-      createPlayer()
-    } else {
-      const prev = window.onYouTubeIframeAPIReady
-      window.onYouTubeIframeAPIReady = () => {
-        if (typeof prev === 'function') prev()
-        createPlayer()
-      }
-      if (!document.querySelector('script[src*="youtube.com/iframe_api"]')) {
-        const tag = document.createElement('script')
-        tag.src = 'https://www.youtube.com/iframe_api'
-        document.head.appendChild(tag)
-      }
-    }
-
-    return () => {
-      cancelled = true
-      try { playerRef.current?.destroy?.() } catch { /* noop */ }
-      playerRef.current = null
-    }
-  }, [])
-
   function toggle() {
-    if (!ready || !playerRef.current) return
+    const a = audioRef.current
+    if (!a) return
     dismissHint()
-    const p = playerRef.current
-    if (muted) {
-      // Start playback within the user gesture, then unmute. If the unmute
-      // doesn't "stick" before playback begins (common on mobile), the
-      // onStateChange PLAYING handler re-applies it.
-      wantSoundRef.current = true
-      p.playVideo()
-      p.unMute()
-      p.setVolume(100)
-      setMuted(false)
+    if (a.paused) {
+      // play() inside the click handler is the user gesture iOS requires.
+      a.play().catch(() => { /* play was blocked or interrupted — ignore */ })
     } else {
-      wantSoundRef.current = false
-      p.mute()
-      setMuted(true)
+      a.pause()
     }
   }
 
   return (
     <>
-      {/* Hidden iframe — positioned off-screen so the player still loads & plays */}
-      <div
-        aria-hidden="true"
-        style={{
-          position:      'fixed',
-          left:          -9999,
-          top:           0,
-          width:         1,
-          height:        1,
-          opacity:       0,
-          pointerEvents: 'none',
-          overflow:      'hidden',
-        }}
-      >
-        <div ref={containerRef} />
-      </div>
+      {/* Hidden looping audio — playback state is mirrored from the element's
+          own play/pause events so the icon stays in sync. */}
+      <audio
+        ref={audioRef}
+        src={MUSIC_URL}
+        loop
+        preload="auto"
+        onPlay={() => setPlaying(true)}
+        onPause={() => setPlaying(false)}
+      />
 
       {/* Hint bubble — nudges guests that music is available */}
       <div
@@ -175,7 +98,6 @@ export default function BackgroundMusic() {
             ×
           </button>
           <button type="button" onClick={toggle} className="text-left">
-            {/* <p className="font-script text-dustyRose text-lg leading-tight mb-0.5">A little music?</p> */}
             <p className="font-sans text-xs text-bark/70 leading-snug">
               Click the speaker to enjoy a musical experience&nbsp;♪
             </p>
@@ -195,17 +117,16 @@ export default function BackgroundMusic() {
       <button
         type="button"
         onClick={toggle}
-        disabled={!ready}
-        aria-label={muted ? 'Unmute background music' : 'Mute background music'}
-        title={muted ? 'Unmute music' : 'Mute music'}
-        className="fixed bottom-6 right-6 z-50 w-11 h-11 rounded-full flex items-center justify-center backdrop-blur-sm border transition-all duration-200 disabled:opacity-40 disabled:cursor-not-allowed"
+        aria-label={playing ? 'Pause background music' : 'Play background music'}
+        title={playing ? 'Pause music' : 'Play music'}
+        className="fixed bottom-6 right-6 z-50 w-11 h-11 rounded-full flex items-center justify-center backdrop-blur-sm border transition-all duration-200"
         style={{
           backgroundColor: 'rgba(244, 232, 214, 0.85)',
           borderColor:     'rgba(196, 126, 133, 0.5)',
           color:           '#5C3D2E',
         }}
       >
-        {muted ? <SpeakerOffIcon /> : <SpeakerOnIcon />}
+        {playing ? <SpeakerOnIcon /> : <SpeakerOffIcon />}
       </button>
     </>
   )

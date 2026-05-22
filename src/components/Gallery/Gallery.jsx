@@ -9,11 +9,66 @@ function imgUrl(publicId, width = 800) {
   return `https://res.cloudinary.com/${CLOUD_NAME}/image/upload/w_${width},q_auto,f_auto/${publicId}`
 }
 
+// Cloudinary can serve a still frame from a video by swapping the extension to
+// an image one; so_auto picks a representative frame for the poster/thumbnail.
+function videoPoster(publicId, width = 800) {
+  return `https://res.cloudinary.com/${CLOUD_NAME}/video/upload/w_${width},q_auto,f_auto,so_auto/${publicId}.jpg`
+}
+
+function videoUrl(publicId) {
+  return `https://res.cloudinary.com/${CLOUD_NAME}/video/upload/q_auto/${publicId}.mp4`
+}
+
 // Cap full-res at 900px on mobile (screens ≤768px) — 1600px is wasted on phone displays
 const FULL_RES = typeof window !== 'undefined' && window.innerWidth <= 768 ? 900 : 1600
 
-function listUrl() {
+function imageListUrl() {
   return `https://res.cloudinary.com/${CLOUD_NAME}/image/list/${TAG}.json`
+}
+
+function videoListUrl() {
+  return `https://res.cloudinary.com/${CLOUD_NAME}/video/list/${TAG}.json`
+}
+
+function PlayBadge() {
+  return (
+    <div className="absolute inset-0 flex items-center justify-center pointer-events-none">
+      <span className="w-12 h-12 rounded-full bg-bark/45 backdrop-blur-sm flex items-center justify-center">
+        <svg viewBox="0 0 24 24" className="w-5 h-5 text-ivory ml-0.5" fill="currentColor" aria-hidden="true">
+          <path d="M8 5v14l11-7z" />
+        </svg>
+      </span>
+    </div>
+  )
+}
+
+// `index` is the position in the combined (videos-then-photos) list, which the
+// lightbox uses for navigation.
+function MediaTile({ item, index, onOpen }) {
+  return (
+    <motion.div
+      className="relative w-full rounded-sm overflow-hidden hover:opacity-90 transition-opacity duration-300"
+      style={{ cursor: 'none' }}
+      initial={{ opacity: 0, scale: 0.96 }}
+      whileInView={{ opacity: 1, scale: 1 }}
+      viewport={{ once: true, amount: 0.1 }}
+      transition={{ duration: 0.5, delay: (index % 8) * 0.06 }}
+      onClick={() => onOpen(index)}
+      onKeyDown={(e) => e.key === 'Enter' && onOpen(index)}
+      tabIndex={0}
+      role="button"
+      aria-label={item.type === 'video' ? 'Play video' : 'Open photo'}
+    >
+      <img
+        src={item.type === 'video' ? item.poster : item.src}
+        alt={item.alt}
+        loading="lazy"
+        decoding="async"
+        className="w-full block object-cover"
+      />
+      {item.type === 'video' && <PlayBadge />}
+    </motion.div>
+  )
 }
 
 function LoadingSkeleton() {
@@ -45,18 +100,24 @@ function EmptyState() {
         <circle cx="24" cy="30" r="5" />
         <polyline points="8,44 22,30 32,40 42,28 56,44" />
       </svg>
-      <p className="font-serif italic text-bark/40 text-lg">Photos coming soon</p>
+      <p className="font-serif italic text-bark/40 text-lg">Photos &amp; videos coming soon</p>
       <p className="font-sans text-xs text-bark/30 tracking-widest uppercase mt-2">
-        Upload photos to your Cloudinary folder to populate the gallery
+        Upload media to your Cloudinary folder to populate the gallery
       </p>
     </div>
   )
 }
 
 export default function Gallery() {
-  const [photos, setPhotos]       = useState([])
+  const [media, setMedia]         = useState([])
   const [loading, setLoading]     = useState(true)
   const [selectedIndex, setSelectedIndex] = useState(null)
+
+  // Group videos before photos. The combined order (videos first) is what the
+  // lightbox indexes into, so the tiles pass their position in this list.
+  const videos  = media.filter((m) => m.type === 'video')
+  const photos  = media.filter((m) => m.type === 'image')
+  const ordered = [...videos, ...photos]
 
   useEffect(() => {
     if (!CLOUD_NAME) {
@@ -64,20 +125,30 @@ export default function Gallery() {
       return
     }
 
-    fetch(listUrl())
-      .then((r) => r.json())
-      .then((data) => {
-        const resources = data.resources ?? []
-        setPhotos(
-          resources.map((r, i) => ({
-            id:      r.public_id,
-            src:     imgUrl(r.public_id, 800),
-            fullSrc: imgUrl(r.public_id, FULL_RES),
-            alt:     `Snigdha & Pramod — photo ${i + 1}`,
-          }))
+    const safeFetch = (url) => fetch(url).then((r) => r.json()).catch(() => ({ resources: [] }))
+
+    Promise.all([safeFetch(imageListUrl()), safeFetch(videoListUrl())])
+      .then(([imgData, vidData]) => {
+        const images = (imgData.resources ?? []).map((r) => ({
+          type:    'image',
+          id:      r.public_id,
+          created: r.created_at,
+          src:     imgUrl(r.public_id, 800),
+          fullSrc: imgUrl(r.public_id, FULL_RES),
+        }))
+        const videos = (vidData.resources ?? []).map((r) => ({
+          type:    'video',
+          id:      r.public_id,
+          created: r.created_at,
+          src:     videoUrl(r.public_id),
+          poster:  videoPoster(r.public_id, 800),
+        }))
+        // Interleave by recency so videos sit naturally among the photos.
+        const merged = [...images, ...videos].sort((a, b) =>
+          (b.created ?? '').localeCompare(a.created ?? '')
         )
+        setMedia(merged.map((m, i) => ({ ...m, alt: `Snigdha & Pramod — ${i + 1}` })))
       })
-      .catch(() => {/* silently show empty state */})
       .finally(() => setLoading(false))
   }, [])
 
@@ -107,39 +178,39 @@ export default function Gallery() {
         {/* Content */}
         {loading ? (
           <LoadingSkeleton />
-        ) : photos.length === 0 ? (
+        ) : media.length === 0 ? (
           <EmptyState />
         ) : (
-          <div className="columns-2 md:columns-3 lg:columns-4 gap-3">
-            {photos.map((photo, i) => (
-              <div key={photo.id} className="break-inside-avoid mb-3">
-                <motion.img
-                  src={photo.src}
-                  alt={photo.alt}
-                  loading="lazy"
-                  decoding="async"
-                  className="w-full rounded-sm object-cover hover:opacity-90 transition-opacity duration-300"
-                  style={{ cursor: 'none' }}
-                  initial={{ opacity: 0, scale: 0.96 }}
-                  whileInView={{ opacity: 1, scale: 1 }}
-                  viewport={{ once: true, amount: 0.1 }}
-                  transition={{ duration: 0.5, delay: (i % 8) * 0.06 }}
-                  onClick={() => setSelectedIndex(i)}
-                  onKeyDown={(e) => e.key === 'Enter' && setSelectedIndex(i)}
-                  tabIndex={0}
-                  role="button"
-                  aria-label={`Open photo ${i + 1}`}
-                />
+          <>
+            {/* Videos — grouped above the photos, in larger landscape-friendly tiles */}
+            {videos.length > 0 && (
+              <div className="grid grid-cols-1 sm:grid-cols-2 gap-3 mb-10">
+                {videos.map((item, i) => (
+                  <MediaTile key={item.id} item={item} index={i} onOpen={setSelectedIndex} />
+                ))}
               </div>
-            ))}
-          </div>
+            )}
+
+            {/* Photos — masonry */}
+            <div className="columns-2 md:columns-3 lg:columns-4 gap-3">
+              {photos.map((item, i) => (
+                <div key={item.id} className="break-inside-avoid mb-3">
+                  <MediaTile item={item} index={videos.length + i} onOpen={setSelectedIndex} />
+                </div>
+              ))}
+            </div>
+          </>
         )}
       </div>
 
       {/* Lightbox */}
       {selectedIndex !== null && (
         <Lightbox
-          photos={photos.map((p) => ({ ...p, src: p.fullSrc, thumb: p.src }))}
+          items={ordered.map((m) =>
+            m.type === 'video'
+              ? { ...m, src: m.src, thumb: m.poster }
+              : { ...m, src: m.fullSrc, thumb: m.src }
+          )}
           selectedIndex={selectedIndex}
           onClose={() => setSelectedIndex(null)}
           onNavigate={setSelectedIndex}

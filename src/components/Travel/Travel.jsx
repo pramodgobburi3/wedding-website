@@ -32,7 +32,7 @@ export default function Travel() {
           <p className="font-sans text-xs tracking-widest uppercase text-dustyRose mb-3">Closest Airport</p>
           <AirportBlock
             name="Ronald Reagan Washington National Airport (DCA)"
-            distance="4 miles from the Waldorf"
+            distance="4 miles from Waldorf Astoria DC"
           />
         </div>
 
@@ -40,11 +40,11 @@ export default function Travel() {
           <p className="font-sans text-xs tracking-widest uppercase text-dustyRose mb-3">Additional Airport Options</p>
           <AirportBlock
             name="Washington Dulles International Airport (IAD)"
-            distance="25 miles from the Waldorf"
+            distance="25 miles from Waldorf Astoria DC"
           />
           <AirportBlock
             name="Baltimore/Washington International Thurgood Marshall Airport (BWI)"
-            distance="31 miles from the Waldorf"
+            distance="31 miles from Waldorf Astoria DC"
           />
         </div>
 
@@ -56,18 +56,17 @@ export default function Travel() {
 
         <p className="font-sans text-xs tracking-widest uppercase text-dustyRose mb-4">Please Note</p>
         <p className="font-serif italic text-bark/70 text-lg md:text-xl leading-relaxed">
-          For our family and friends staying at the hotel, we will provide
+          For our family and friends staying at the hotel, we'll be providing
           shuttle services to and from the hotel and our Sangeet and Reception
           venues.
         </p>
         <p className="font-serif italic text-bark/70 text-lg md:text-xl leading-relaxed mt-5">
-          For our family and friends who are local to DC, we will provide
+          For our family and friends who are local to DC, we'll be providing
           valet services at the event venues.
         </p>
 
         <p className="font-serif italic text-bark/55 text-base md:text-lg leading-relaxed mt-8">
-          As our wedding weekend approaches, additional travel information will be
-          updated here.
+          Additional travel and transportation details will be shared here as the wedding weekend approaches.
         </p>
       </div>
     </section>

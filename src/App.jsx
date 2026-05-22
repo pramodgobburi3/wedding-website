@@ -11,19 +11,27 @@ import mandapHeaderImg from './assets/photos/mandap.svg'
 import floralHeaderImg from './assets/photos/floral.svg'
 import { FLAGS } from './featureFlags'
 
+// In-flow sections are imported eagerly so they render at their real height
+// from the first paint. Lazy-loading them was the cause of anchor links landing
+// on the wrong section on first load: the short Suspense fallbacks let the
+// browser jump before the real (taller) content loaded and pushed the target
+// down. Eager rendering removes the shift entirely, so native smooth anchor
+// scrolling lands correctly the first time.
+import OurStory from './components/OurStory/OurStory'
+import Gallery  from './components/Gallery/Gallery'
+import RSVPForm from './components/RSVP/RSVPForm'
+import Venues   from './components/Venues/Venues'
+import Travel   from './components/Travel/Travel'
+import Registry from './components/Registry/Registry'
+
 gsap.registerPlugin(ScrollTrigger)
 
-const AdminApp       = lazy(() => import('./admin/AdminApp'))
-const Terms          = lazy(() => import('./components/Terms/Terms'))
-const Privacy        = lazy(() => import('./components/Privacy/Privacy'))
-const GardenScene    = lazy(() => import('./components/Hero/GardenScene'))
-const OurStory       = lazy(() => import('./components/OurStory/OurStory'))
-const Celebrations   = lazy(() => import('./components/OurStory/Celebrations'))
-const Gallery        = lazy(() => import('./components/Gallery/Gallery'))
-const RSVPForm       = lazy(() => import('./components/RSVP/RSVPForm'))
-const Venues         = lazy(() => import('./components/Venues/Venues'))
-const Travel         = lazy(() => import('./components/Travel/Travel'))
-const Registry       = lazy(() => import('./components/Registry/Registry'))
+// These stay lazy: separate route-level views, and the heavy 3D scene (a fixed
+// background — not in the document flow, so it doesn't affect anchor offsets).
+const AdminApp    = lazy(() => import('./admin/AdminApp'))
+const Terms       = lazy(() => import('./components/Terms/Terms'))
+const Privacy     = lazy(() => import('./components/Privacy/Privacy'))
+const GardenScene = lazy(() => import('./components/Hero/GardenScene'))
 
 function SectionFallback() {
   return <div className="min-h-[400px]" aria-hidden="true" />

@@ -61,16 +61,16 @@ export default function Venues() {
         <VenueBlock
           label="Sangeet"
           name="The Robert and Arlene Kogod Courtyard"
-          sublines={['Inside the Smithsonian American Art Museum & the National Portrait Gallery']}
-          address="8th Street Northwest & G St NW, Washington, DC 20001"
-          distance="0.5 miles from the Waldorf"
+          sublines={['Smithsonian American Art Museum & the National Portrait Gallery']}
+          address="8th and G Streets, NW Washington, DC 20001"
+          distance="0.5 miles from Waldorf Astoria DC"
         />
 
         <VenueBlock
           label="Reception"
-          name="The Andrew W. Mellon Auditorium"
-          address="1301 Constitution Ave. NW, Washington, DC 20240"
-          distance="0.5 miles from the Waldorf"
+          name="Andrew W. Mellon Auditorium"
+          address="1301 Constitution Ave NW, Washington, DC 20240"
+          distance="0.5 miles from Waldorf Astoria DC"
         />
       </div>
     </section>

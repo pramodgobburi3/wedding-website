@@ -181,7 +181,7 @@ export default function OurStory() {
 
         {/* ── Request line ── */}
         <p className="font-serif italic text-bark/70 text-lg md:text-xl leading-relaxed mb-8 px-4">
-          request the honour of your presence<br />
+          request the honor of your presence<br />
           at the auspicious wedding of their children
         </p>
 
@@ -209,7 +209,7 @@ export default function OurStory() {
         {/* ── Date & venue ── */}
         <div className="mb-8">
           <SmallCaps className="mb-2">Sunday · The Sixteenth of August</SmallCaps>
-          <p className="font-script text-gold text-3xl mb-2">Two Thousand & Twenty Six</p>
+          <p className="font-script text-gold text-3xl mb-2">Two Thousand Twenty Six</p>
           <SmallCaps>Presidential Ballroom · Waldorf Astoria DC</SmallCaps>
         </div>
       </div>
