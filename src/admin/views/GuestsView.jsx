@@ -2,7 +2,7 @@ import { useState, useEffect, Fragment, useRef, useMemo } from 'react'
 import { supabase } from '../../lib/supabase'
 import { BLANK_GUEST } from '../lib/constants'
 import { normalizePhone, isInternationalPhone, groupLabel } from '../lib/utils'
-import { parseCSV } from '../lib/csv'
+import { parseCSV, toCSV, downloadCSV } from '../lib/csv'
 import { Btn } from '../components/ui'
 import GuestFormFields from '../components/GuestFormFields'
 
@@ -158,6 +158,20 @@ export default function GuestsView() {
 
   useEffect(() => { load() }, [])
 
+  function exportCSV() {
+    const csv = toCSV([
+      { label: 'Name',            value: g => g.name ?? '' },
+      { label: 'Party',           value: g => g.party_name ?? '' },
+      { label: 'Group',           value: g => g.group?.name ? groupLabel(g.group.name) : '' },
+      { label: 'Phones',          value: g => (g.phones ?? []).map(p => p.phone).join('; ') },
+      { label: 'International',    value: g => (g.phones ?? []).some(p => p.is_international) ? 'Yes' : 'No' },
+      { label: 'Events override', value: g => (g.events_override ?? []).join(', ') },
+      { label: 'RSVP',            value: g => respondedSet.has(g.id) ? 'Responded' : 'Pending' },
+    ], filteredGuests)
+    const date = new Date().toISOString().slice(0, 10)
+    downloadCSV(`guests-${date}.csv`, csv)
+  }
+
   async function handleAdd(e) {
     e.preventDefault()
     const { data: guest, error } = await supabase
@@ -305,6 +319,9 @@ export default function GuestsView() {
             : `${guests.reduce((sum, g) => sum + ((g.name ?? '').split(',').map(n => n.trim()).filter(Boolean).length || 1), 0)} guests`}
         </div>
         <div className="flex gap-2 flex-shrink-0">
+          <Btn variant="secondary" onClick={exportCSV} disabled={filteredGuests.length === 0}>
+            Export CSV
+          </Btn>
           <Btn variant="secondary" onClick={() => { setShowImport(v => !v); setImportPreview([]); setImportResult(null) }}>
             Import CSV
           </Btn>

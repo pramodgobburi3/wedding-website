@@ -142,6 +142,12 @@ export default function Gallery() {
           created: r.created_at,
           src:     videoUrl(r.public_id),
           poster:  videoPoster(r.public_id, 800),
+          // Caption from the asset's contextual metadata (the "Caption" field in
+          // the Cloudinary Media Library). Check a few shapes for safety.
+          caption: r.context?.custom?.caption
+                ?? r.context?.custom?.title
+                ?? r.context?.caption
+                ?? null,
         }))
         // Interleave by recency so videos sit naturally among the photos.
         const merged = [...images, ...videos].sort((a, b) =>
@@ -182,16 +188,28 @@ export default function Gallery() {
           <EmptyState />
         ) : (
           <>
-            {/* Videos — grouped above the photos, in larger landscape-friendly tiles */}
+            {/* Videos — grouped above the photos, centered, each with its caption */}
             {videos.length > 0 && (
-              <div className="grid grid-cols-1 sm:grid-cols-2 gap-3 mb-10">
+              <div className="mb-10 flex flex-wrap justify-center gap-8">
                 {videos.map((item, i) => (
-                  <MediaTile key={item.id} item={item} index={i} onOpen={setSelectedIndex} />
+                  <div key={item.id} className="w-full sm:w-[30rem] max-w-full">
+                    {item.caption && (
+                      <p className="font-sans text-xs tracking-[0.25em] uppercase text-bark/60 text-center mb-3">
+                        {item.caption}
+                      </p>
+                    )}
+                    <MediaTile item={item} index={i} onOpen={setSelectedIndex} />
+                  </div>
                 ))}
               </div>
             )}
 
             {/* Photos — masonry */}
+            {photos.length > 0 && (
+              <p className="font-sans text-xs tracking-[0.25em] uppercase text-bark/60 text-center mb-4">
+                Our Favorite Moments
+              </p>
+            )}
             <div className="columns-2 md:columns-3 lg:columns-4 gap-3">
               {photos.map((item, i) => (
                 <div key={item.id} className="break-inside-avoid mb-3">

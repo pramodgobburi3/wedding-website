@@ -19,7 +19,7 @@ function GoldDivider({ wide = false }) {
 
 function SmallCaps({ children, className = '' }) {
   return (
-    <p className={`font-sans text-xs tracking-[0.38em] uppercase text-bark/70 ${className}`}>
+    <p className={`font-sans text-xs tracking-[0.38em] uppercase text-bark/85 ${className}`}>
       {children}
     </p>
   )
@@ -35,14 +35,14 @@ function FamilyBlock({ label, maternalGrandparents, paternalGrandparents, parent
 
       {hasElders && (
         <div className="mb-4">
-          <p className="font-serif italic text-bark/55 text-base mb-2">With the blessings of</p>
+          <p className="font-serif text-bark/75 text-base mb-2">With the blessings of</p>
           {paternalGrandparents && (
-            <p className="font-serif text-bark/70 text-lg leading-snug">
+            <p className="font-serif text-bark/90 text-lg leading-snug">
               {paternalGrandparents}
             </p>
           )}
           {maternalGrandparents && (
-            <p className="font-serif text-bark/70 text-lg leading-snug mb-1">
+            <p className="font-serif text-bark/90 text-lg leading-snug mb-1">
               {maternalGrandparents}
             </p>
           )}
@@ -136,8 +136,8 @@ export default function OurStory() {
                 >
                   {telugu}
                 </span>
-                <span className="block font-sans text-[11px] tracking-widest uppercase text-bark/50 mt-1">{roman}</span>
-                <span className="block font-serif italic text-bark/50 text-base mt-0.5">{meaning}</span>
+                <span className="block font-sans text-[11px] tracking-widest uppercase text-bark/70 mt-1">{roman}</span>
+                <span className="block font-serif text-bark/70 text-base mt-0.5">{meaning}</span>
               </span>
               {i < arr.length - 1 && (
                 <span className="text-gold/40 self-start mt-1" style={{ fontSize: 'clamp(1.2rem, 3vw, 1.65rem)' }}>|</span>
@@ -149,7 +149,7 @@ export default function OurStory() {
         <GoldDivider wide />
 
         {/* ── Opening blessing ── */}
-        <p className="font-serif italic text-bark/70 text-lg md:text-xl leading-relaxed mb-8 px-2">
+        <p className="font-serif text-bark/90 text-lg md:text-xl leading-relaxed mb-8 px-2">
           With the blessings of the Divine<br />
           and the gracious wishes of friends and family
         </p>
@@ -180,7 +180,7 @@ export default function OurStory() {
         <GoldDivider wide />
 
         {/* ── Request line ── */}
-        <p className="font-serif italic text-bark/70 text-lg md:text-xl leading-relaxed mb-8 px-4">
+        <p className="font-serif text-bark/90 text-lg md:text-xl leading-relaxed mb-8 px-4">
           request the honor of your presence<br />
           at the auspicious wedding of their children
         </p>
