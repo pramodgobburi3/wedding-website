@@ -1,18 +1,7 @@
 import { useState, useEffect } from 'react'
 import { supabase } from '../../lib/supabase'
 import { Btn } from '../components/ui'
-
-function formatLong(iso) {
-  if (!iso) return ''
-  return new Date(`${iso}T00:00:00`).toLocaleDateString('en-US', {
-    weekday: 'long', month: 'long', day: 'numeric', year: 'numeric',
-  })
-}
-
-function todayISO() {
-  const d = new Date()
-  return `${d.getFullYear()}-${String(d.getMonth() + 1).padStart(2, '0')}-${String(d.getDate()).padStart(2, '0')}`
-}
+import BroadcastSection from '../components/BroadcastSection'
 
 // Accepts +E.164, 10-digit US, or 1XXXXXXXXXX → returns +E.164 or null
 function normalizeE164(raw) {
@@ -27,12 +16,6 @@ function normalizeE164(raw) {
 }
 
 export default function SettingsView() {
-  // RSVP deadline
-  const [deadline, setDeadline]     = useState('')
-  const [deadlineDraft, setDraft]   = useState('')
-  const [savingDeadline, setSavingD] = useState(false)
-  const [savedDeadline, setSavedD]   = useState(false)
-
   // Host notification phones
   const [phones, setPhones]         = useState([])   // array of E.164 strings
   const [phoneInput, setPhoneInput] = useState('')
@@ -46,34 +29,15 @@ export default function SettingsView() {
     setLoading(true)
     const { data, error: loadErr } = await supabase
       .from('app_settings').select('key, value')
-      .in('key', ['rsvp_deadline', 'host_notification_phones'])
+      .eq('key', 'host_notification_phones')
+      .maybeSingle()
     if (loadErr) setError(loadErr.message)
-    const byKey = Object.fromEntries((data ?? []).map(r => [r.key, r.value]))
-    const dl = byKey.rsvp_deadline ?? ''
-    setDeadline(dl || '')
-    setDraft(dl || '')
-    const ph = Array.isArray(byKey.host_notification_phones) ? byKey.host_notification_phones : []
+    const ph = Array.isArray(data?.value) ? data.value : []
     setPhones(ph)
     setLoading(false)
   }
 
   useEffect(() => { load() }, [])
-
-  async function saveDeadline(e) {
-    e.preventDefault()
-    setSavingD(true)
-    setError(null)
-    setSavedD(false)
-    const value = deadlineDraft ? deadlineDraft : null
-    const { error: upErr } = await supabase
-      .from('app_settings')
-      .upsert({ key: 'rsvp_deadline', value }, { onConflict: 'key' })
-    setSavingD(false)
-    if (upErr) { setError(upErr.message); return }
-    setDeadline(value ?? '')
-    setSavedD(true)
-    setTimeout(() => setSavedD(false), 2500)
-  }
 
   async function savePhones(next) {
     setSavingP(true)
@@ -103,52 +67,11 @@ export default function SettingsView() {
 
   if (loading) return <p className="text-sm text-gray-400">Loading…</p>
 
-  const deadlineDirty  = (deadlineDraft || '') !== (deadline || '')
-  const deadlinePassed = deadline && deadline < todayISO()
-
   return (
     <div className="max-w-xl space-y-6">
       {error && <p className="text-xs text-red-500">{error}</p>}
 
-      {/* RSVP deadline */}
-      <div className="bg-white border border-gray-200 rounded-lg p-5">
-        <p className="text-sm font-medium text-gray-800 mb-1">RSVP deadline</p>
-        <p className="text-xs text-gray-500 mb-4">
-          The last day guests can submit an RSVP. After this date the form
-          shows a "RSVPs Are Closed" message and the server refuses new
-          submissions. Leave blank to allow RSVPs indefinitely.
-        </p>
-
-        <form onSubmit={saveDeadline} className="space-y-4">
-          <div className="flex flex-wrap items-end gap-2">
-            <div>
-              <label className="block text-xs text-gray-600 mb-1">Deadline date</label>
-              <input
-                type="date"
-                value={deadlineDraft}
-                onChange={e => setDraft(e.target.value)}
-                className="text-sm border border-gray-300 rounded px-2 py-1.5 focus:outline-none focus:ring-1 focus:ring-rose-300"
-              />
-            </div>
-            <Btn type="submit" variant="primary" disabled={savingDeadline || !deadlineDirty}>
-              {savingDeadline ? 'Saving…' : 'Save'}
-            </Btn>
-            {deadlineDraft && (
-              <Btn variant="secondary" onClick={() => setDraft('')}>Clear</Btn>
-            )}
-            {savedDeadline && <span className="text-xs text-emerald-500">Saved.</span>}
-          </div>
-
-          {deadline ? (
-            <p className="text-xs text-gray-500">
-              Currently set to <span className="font-medium text-gray-700">{formatLong(deadline)}</span>
-              {deadlinePassed && <span className="ml-2 text-amber-600">· this date has already passed, RSVPs are closed</span>}
-            </p>
-          ) : (
-            <p className="text-xs text-gray-400 italic">No deadline set — RSVPs are open indefinitely.</p>
-          )}
-        </form>
-      </div>
+      <BroadcastSection />
 
       {/* Host notification phones */}
       <div className="bg-white border border-gray-200 rounded-lg p-5">

@@ -108,9 +108,36 @@ export default function GuestsView() {
     return set
   }, [responses])
 
+  // Per-guest attending status. 'yes' if any member_attendance entry mapping
+  // to this guest has ≥1 event; 'no' if the guest was accounted for but every
+  // matching entry has an empty events array. Guests missing from responses
+  // return undefined (pending — see respondedSet).
+  const attendingMap = useMemo(() => {
+    const map = {}
+    responses.forEach(r => {
+      const ma = r.member_attendance
+      if (!ma) return
+      Object.entries(ma).forEach(([memberId, member]) => {
+        if (memberId.startsWith('additional_')) return
+        const idx = memberId.indexOf('__')
+        const guestId = idx === -1 ? memberId : memberId.slice(0, idx)
+        const attending = Array.isArray(member?.events) && member.events.length > 0
+        // 'yes' wins if any split-name entry for this guest is attending.
+        if (attending) map[guestId] = 'yes'
+        else if (!map[guestId]) map[guestId] = 'no'
+      })
+    })
+    return map
+  }, [responses])
+
   const respondedCount = useMemo(
     () => guests.filter(g => respondedSet.has(g.id)).length,
     [guests, respondedSet]
+  )
+
+  const attendingCount = useMemo(
+    () => guests.filter(g => attendingMap[g.id] === 'yes').length,
+    [guests, attendingMap]
   )
 
   const filteredGuests = useMemo(() => {
@@ -167,6 +194,10 @@ export default function GuestsView() {
       { label: 'International',    value: g => (g.phones ?? []).some(p => p.is_international) ? 'Yes' : 'No' },
       { label: 'Events override', value: g => (g.events_override ?? []).join(', ') },
       { label: 'RSVP',            value: g => respondedSet.has(g.id) ? 'Responded' : 'Pending' },
+      { label: 'Attending',       value: g => {
+        const a = attendingMap[g.id]
+        return a === 'yes' ? 'Yes' : a === 'no' ? 'No' : ''
+      } },
     ], filteredGuests)
     const date = new Date().toISOString().slice(0, 10)
     downloadCSV(`guests-${date}.csv`, csv)
@@ -463,13 +494,14 @@ export default function GuestsView() {
               <th className="px-4 py-3 text-xs font-medium text-gray-500 uppercase tracking-wide">Party</th>
               <th className="px-4 py-3 text-xs font-medium text-gray-500 uppercase tracking-wide">Events</th>
               <th className="px-4 py-3 text-xs font-medium text-gray-500 uppercase tracking-wide">Status</th>
+              <th className="px-4 py-3 text-xs font-medium text-gray-500 uppercase tracking-wide">Attending</th>
               <th className="px-4 py-3" />
             </tr>
           </thead>
           <tbody className="divide-y divide-gray-100">
             {filteredGuests.length === 0 && (
               <tr>
-                <td colSpan={6} className="px-4 py-8 text-center text-sm text-gray-400">
+                <td colSpan={7} className="px-4 py-8 text-center text-sm text-gray-400">
                   {search.trim() ? 'No guests match your search.' : 'No guests yet.'}
                 </td>
               </tr>
@@ -482,7 +514,7 @@ export default function GuestsView() {
               <Fragment key={guest.id}>
                 {editingId === guest.id ? (
                   <tr className={groupBreakClass}>
-                    <td colSpan={6} className="px-4 py-4">
+                    <td colSpan={7} className="px-4 py-4">
                       <form onSubmit={handleUpdate} className="space-y-3">
                         <GuestFormFields form={editForm} onChange={setEditForm} groups={groups} events={events} showPhones partyGroupMap={partyGroupMap} />
                         <div className="flex gap-2">
@@ -520,6 +552,14 @@ export default function GuestsView() {
                         ? <span className="inline-block px-2 py-0.5 rounded bg-green-50 text-green-700 font-medium">Responded</span>
                         : <span className="inline-block px-2 py-0.5 rounded bg-amber-50 text-amber-700 font-medium">Pending</span>}
                     </td>
+                    <td className="px-4 py-3 text-xs">
+                      {(() => {
+                        const a = attendingMap[guest.id]
+                        if (a === 'yes') return <span className="inline-block px-2 py-0.5 rounded bg-emerald-50 text-emerald-700 font-medium">Yes</span>
+                        if (a === 'no')  return <span className="inline-block px-2 py-0.5 rounded bg-red-50 text-red-700 font-medium">No</span>
+                        return <span className="text-gray-300 italic">—</span>
+                      })()}
+                    </td>
                     <td className="px-4 py-3 text-right whitespace-nowrap">
                       <Btn variant="ghost" onClick={e => { e.stopPropagation(); startEdit(guest) }}>Edit</Btn>
                       <Btn variant="danger" onClick={e => { e.stopPropagation(); handleDelete(guest.id) }} className="ml-2">Delete</Btn>
@@ -529,7 +569,7 @@ export default function GuestsView() {
 
                 {expandedIds.has(guest.id) && editingId !== guest.id && (
                   <tr>
-                    <td colSpan={6} className="px-6 py-3 bg-gray-50 border-t border-gray-100">
+                    <td colSpan={7} className="px-6 py-3 bg-gray-50 border-t border-gray-100">
                       <div className="flex flex-wrap gap-2 mb-2">
                         {guest.phones.length === 0 && (
                           <span className="text-xs text-gray-400">No phone numbers yet</span>

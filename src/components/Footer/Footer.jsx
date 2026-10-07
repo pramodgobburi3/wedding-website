@@ -37,6 +37,7 @@ export default function Footer() {
           ['Invitation',    '#invitation'],
           ['Gallery',       '#gallery'],
           ['RSVP',          '#rsvp'],
+          ['Events',  '#events'],
           ['Venues',        '#venues'],
           ['Travel',        '#travel'],
         ].map(([label, href]) => (

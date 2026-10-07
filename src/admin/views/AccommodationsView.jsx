@@ -90,6 +90,9 @@ export default function AccommodationsView() {
       { label: 'Phone',          value: r => r.phone },
       { label: 'Email',          value: r => r.email },
       { label: 'Guests',         value: r => r.guestCount },
+      { label: 'Party members',  value: r => JSON.stringify(
+        r.members.map(m => m.additional ? `${m.name} (added)` : m.name)
+      ) },
       { label: 'Nights',         value: r => r.nights.map(formatDate).join('; ') },
       { label: 'Submitted',      value: r => new Date(r.submittedAt).toISOString() },
     ], rows)

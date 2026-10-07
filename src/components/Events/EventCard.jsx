@@ -1,4 +1,3 @@
-import { useState } from 'react'
 import { motion } from 'framer-motion'
 
 // ─── Hindu ceremony-specific icons ───────────────────────────────────────────
@@ -330,130 +329,158 @@ function PaisleyCorner({ color, flip = false }) {
   )
 }
 
+// ─── Small building blocks ────────────────────────────────────────────────────
+
+function StackedField({ label, accent, children }) {
+  return (
+    <div>
+      <p
+        className="font-sans text-[10px] tracking-[0.22em] uppercase leading-none mb-1.5"
+        style={{ color: accent }}
+      >
+        {label}
+      </p>
+      <div className="font-serif italic text-bark/80 text-lg leading-snug">
+        {children}
+      </div>
+    </div>
+  )
+}
+
+function MapPinIcon() {
+  return (
+    <svg viewBox="0 0 16 16" className="w-3 h-3 flex-shrink-0" fill="currentColor" aria-hidden="true">
+      <path d="M8 1a4.5 4.5 0 0 0-4.5 4.5C3.5 9 8 15 8 15s4.5-6 4.5-9.5A4.5 4.5 0 0 0 8 1zm0 6a1.5 1.5 0 1 1 0-3 1.5 1.5 0 0 1 0 3z" />
+    </svg>
+  )
+}
+
+function CalendarIcon() {
+  return (
+    <svg viewBox="0 0 16 16" className="w-3.5 h-3.5 flex-shrink-0" fill="currentColor" aria-hidden="true">
+      <path d="M4 1v1H2.5A1.5 1.5 0 0 0 1 3.5v10A1.5 1.5 0 0 0 2.5 15h11a1.5 1.5 0 0 0 1.5-1.5v-10A1.5 1.5 0 0 0 13.5 2H12V1a1 1 0 1 0-2 0v1H6V1a1 1 0 1 0-2 0zm-2 5h12v7.5a.5.5 0 0 1-.5.5h-11a.5.5 0 0 1-.5-.5V6zm2 2v2h2V8H4zm3 0v2h2V8H7zm3 0v2h2V8h-2z" />
+    </svg>
+  )
+}
+
 // ─── Event card ───────────────────────────────────────────────────────────────
 
-export default function EventCard({ id, name, tagline, date, time, venue, dresscode, accent, icon, mapUrl, index }) {
-  const [flipped, setFlipped] = useState(false)
-
+export default function EventCard({
+  id,
+  name,
+  tagline,
+  whenLabel,
+  venue,
+  streetAddress,
+  mapUrl,
+  dresscode,
+  sumuhurtham,
+  accent,
+  icon,
+  icsUri,
+  icsFilename,
+  index,
+}) {
   return (
-    <motion.div
-      className="w-full max-w-[320px] sm:max-w-none mx-auto"
-      style={{ filter: 'drop-shadow(0 4px 16px rgba(0,0,0,0.32)) drop-shadow(0 1px 4px rgba(0,0,0,0.22))' }}
+    <motion.article
+      className="flex flex-col w-full h-full rounded-sm overflow-hidden"
+      style={{
+        backgroundColor: '#F5EFE3',
+        border: `1px solid ${accent}55`,
+        borderTop: `3px solid ${accent}`,
+        filter: 'drop-shadow(0 4px 16px rgba(0,0,0,0.22)) drop-shadow(0 1px 4px rgba(0,0,0,0.16))',
+      }}
       initial={{ opacity: 0, y: 40 }}
       whileInView={{ opacity: 1, y: 0 }}
-      viewport={{ once: true, amount: 0.3 }}
+      viewport={{ once: true, amount: 0.2 }}
       transition={{ duration: 0.6, delay: index * 0.12, ease: 'easeOut' }}
     >
-      <div
-        className="relative w-full"
-        style={{ perspective: '1200px', height: 380, cursor: 'none' }}
-        onPointerEnter={e => { if (e.pointerType === 'mouse') setFlipped(true) }}
-        onPointerLeave={e => { if (e.pointerType === 'mouse') setFlipped(false) }}
-        onClick={() => setFlipped(f => !f)}
-        role="button"
-        tabIndex={0}
-        aria-label={`${name} — tap to see details`}
-        onKeyDown={e => e.key === 'Enter' && setFlipped(f => !f)}
-      >
-        <div
-          className="absolute inset-0 preserve-3d"
-          style={{
-            transition: 'transform 0.65s cubic-bezier(0.4,0,0.2,1)',
-            transform: flipped ? 'rotateY(180deg)' : 'rotateY(0deg)',
-          }}
-        >
-          {/* ── Front ── */}
-          <div
-            className="absolute inset-0 backface-hidden rounded-sm overflow-hidden flex flex-col items-center justify-center p-6 text-center"
-            style={{
-              backgroundColor: '#F8F3EC',
-              borderTop: `3px solid ${accent}`,
-              border: `1px solid ${accent}55`,
-            }}
-          >
-            {/* Paisley corner top-right */}
-            <PaisleyCorner color={accent} />
-            {/* Paisley corner bottom-left (flipped) */}
-            <svg
-              aria-hidden="true"
-              className="absolute bottom-3 left-3 w-8 h-8 opacity-20"
-              viewBox="0 0 36 40"
-              fill={accent}
-              style={{ transform: 'rotate(180deg)' }}
-            >
-              <path d="M 18,36 C 10,32 6,22 8,14 C 10,6 16,2 22,4 C 28,6 30,14 26,20 C 24,24 20,26 18,36 Z" />
-              <path d="M 22,4 C 28,2 32,4 30,8 C 28,10 24,8 22,4 Z" />
-            </svg>
+      {/* Hero image / icon */}
+      <div className="relative h-32 flex items-center justify-center pt-4">
+        <div className="w-24 h-24 flex items-center justify-center">
+          {icon
+            ? <img
+                src={icon}
+                alt=""
+                className="w-full h-full object-contain"
+                style={{ mixBlendMode: 'multiply', opacity: 0.62 }}
+              />
+            : <HinduCeremonyIcon id={id} color={accent} />
+          }
+        </div>
+      </div>
 
-            {/* Event icon */}
-            <div className="w-24 h-24 mb-4 flex items-center justify-center">
-              {icon
-                ? <img src={icon} alt={name} className="w-full h-full object-contain" style={{ mixBlendMode: 'multiply', opacity: 0.62 }} />
-                : <HinduCeremonyIcon id={id} color={accent} />
-              }
-            </div>
-
-            <h3 className="font-serif text-3xl text-bark mb-1" style={{ fontWeight: 400 }}>
-              {name}
-            </h3>
-            <p className="font-script text-lg mb-4" style={{ color: accent }}>
-              {tagline}
+      {/* Body */}
+      <div className="flex-1 flex flex-col px-6 pb-6 pt-2 gap-4">
+        {/* Title block */}
+        <header className="text-center">
+          <h3 className="font-serif text-3xl text-bark leading-tight" style={{ fontWeight: 400 }}>
+            {name}
+          </h3>
+          <p className="font-script text-lg mt-1" style={{ color: accent }}>
+            {tagline}
+          </p>
+          {whenLabel && (
+            <p className="font-sans text-xs tracking-[0.15em] text-bark/60 mt-3">
+              {whenLabel}
             </p>
-            <p className="font-sans text-[10px] tracking-widest uppercase text-bark/30 absolute bottom-4 pointer-events-none select-none">
-              <span className="hidden md:inline">Hover</span>
-              <span className="inline md:hidden">Tap</span>
-              {' '}for details
-            </p>
-          </div>
-
-          {/* ── Back ── */}
-          <div
-            className="absolute inset-0 backface-hidden rotate-y-180 rounded-sm overflow-hidden flex flex-col justify-center p-7 bg-ivory"
-            style={{ border: `1px solid ${accent}28` }}
-          >
-            <div className="absolute top-0 left-0 right-0 h-[3px]" style={{ backgroundColor: accent, opacity: 0.55 }} />
-            {/* Small Om on back */}
-            <span className="absolute top-3 right-4 font-serif text-lg opacity-20" style={{ color: accent }} aria-hidden="true">ॐ</span>
-
-            <h3 className="font-serif text-2xl text-bark mb-4" style={{ fontWeight: 400 }}>{name}</h3>
-            <div className="space-y-3">
-              <DetailRow label="Date"   value={date}      accent={accent} />
-              <DetailRow label="Time"   value={time}      accent={accent} />
-              <DetailRow label="Venue"  value={venue}     accent={accent} />
-              <DetailRow label="Attire" value={dresscode} accent={accent} />
+          )}
+          {/* Sumuhurtham pill (ceremony only) */}
+          {sumuhurtham && (
+            <div>
+              <span
+                className="inline-flex text-bark/60 items-center gap-1.5 px-3 py-1.5 rounded-full font-sans text-[10px] tracking-[0.22em] uppercase"
+              >
+                <span>Sumuhurtham</span>
+                <span aria-hidden="true">·</span>
+                <span>{sumuhurtham}</span>
+              </span>
             </div>
-            {mapUrl && (
+          )}
+        </header>
+
+        {/* Divider */}
+        <div className="flex items-center gap-2 opacity-60" aria-hidden="true">
+          <div className="h-px flex-1" style={{ backgroundColor: `${accent}55` }} />
+          <span className="text-xs" style={{ color: accent }}>✦</span>
+          <div className="h-px flex-1" style={{ backgroundColor: `${accent}55` }} />
+        </div>
+
+        {/* Stacked details */}
+        <div className="space-y-4">
+          <StackedField label="Venue" accent={accent}>
+            <p className="not-italic font-serif text-bark leading-snug">{venue}</p>
+            {mapUrl && streetAddress && (
               <a
                 href={mapUrl}
                 target="_blank"
                 rel="noopener noreferrer"
-                onClick={e => e.stopPropagation()}
-                className="inline-flex items-center gap-1.5 mt-5 font-sans text-[10px] tracking-widest uppercase transition-opacity duration-200 hover:opacity-70"
-                style={{ color: accent, cursor: 'pointer' }}
+                className="mt-1.5 inline-flex items-center gap-1.5 not-italic font-sans text-[11px] tracking-wide text-bark/55 hover:text-bark transition-colors underline decoration-dotted underline-offset-4"
               >
-                <svg viewBox="0 0 16 16" className="w-3 h-3 flex-shrink-0" fill="currentColor" aria-hidden="true">
-                  <path d="M8 1a4.5 4.5 0 0 0-4.5 4.5C3.5 9 8 15 8 15s4.5-6 4.5-9.5A4.5 4.5 0 0 0 8 1zm0 6a1.5 1.5 0 1 1 0-3 1.5 1.5 0 0 1 0 3z"/>
-                </svg>
-                Get Directions
+                <MapPinIcon />
+                <span>{streetAddress}</span>
               </a>
             )}
-          </div>
-        </div>
-      </div>
-    </motion.div>
-  )
-}
+          </StackedField>
 
-function DetailRow({ label, value, accent }) {
-  return (
-    <div className="flex gap-3 text-base">
-      <span
-        className="font-sans text-[11px] tracking-widest uppercase mt-1 flex-shrink-0 w-12"
-        style={{ color: accent }}
-      >
-        {label}
-      </span>
-      <span className="font-serif italic text-bark/70 leading-snug">{value}</span>
-    </div>
+          <StackedField label="Attire" accent={accent}>
+            {dresscode}
+          </StackedField>
+        </div>
+
+        {/* Add to Calendar — pinned bottom, kept understated */}
+        {icsUri && (
+          <a
+            href={icsUri}
+            download={icsFilename ?? `${name}.ics`}
+            className="mt-auto flex items-center justify-center gap-2 w-full pt-4 pb-1 font-sans text-[10px] tracking-[0.22em] uppercase transition-all duration-200 hover:brightness-75"
+            style={{ color: accent }}
+          >
+            <CalendarIcon />
+            Add to Calendar
+          </a>
+        )}
+      </div>
+    </motion.article>
   )
 }

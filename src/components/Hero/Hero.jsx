@@ -271,6 +271,12 @@ export default function Hero() {
             </span>
           )}
           <a
+            href="#events"
+            className="inline-block font-sans text-xs tracking-[0.25em] uppercase px-10 py-3.5 rounded-full border border-blush/50 text-ivory hover:bg-blush/15 transition-all duration-300"
+          >
+            Events
+          </a>
+          <a
             href="#venues"
             className="inline-block font-sans text-xs tracking-[0.25em] uppercase px-10 py-3.5 rounded-full border border-blush/50 text-ivory hover:bg-blush/15 transition-all duration-300"
           >
